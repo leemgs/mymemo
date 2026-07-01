@@ -323,6 +323,25 @@
     memoGrid.style.display = "";
   }
 
+  // ---- busy overlay (save / delete git commit in progress) ----
+  var busyOverlay = $("busyOverlay");
+  var busyTimer = null, busyStart = 0;
+  function showBusy(msg) {
+    $("busyText").textContent = msg || "처리 중…";
+    $("busySecs").textContent = "0.0";
+    busyOverlay.hidden = false;
+    busyStart = Date.now();
+    clearInterval(busyTimer);
+    busyTimer = setInterval(function () {
+      $("busySecs").textContent = ((Date.now() - busyStart) / 1000).toFixed(1);
+    }, 100);
+  }
+  function hideBusy() {
+    clearInterval(busyTimer);
+    busyTimer = null;
+    busyOverlay.hidden = true;
+  }
+
   function refresh() {
     tokenInvalid = false;
     showLoading();
@@ -353,9 +372,11 @@
   }
   function removeMemo(id) {
     if (!confirm("이 메모를 삭제할까요? (Git에서도 삭제 커밋됩니다)")) return;
+    showBusy("메모를 삭제하고 Git에 커밋하는 중…");
     store.remove(id)
       .then(function () { toast("삭제 및 Git 커밋 완료"); return refresh(); })
-      .catch(function (e) { toast(e.message || "삭제 실패", true); });
+      .catch(function (e) { toast(e.message || "삭제 실패", true); })
+      .finally(function () { hideBusy(); });
   }
 
   // ---- new memo modal ----
@@ -380,13 +401,19 @@
     if (files.some(function (f) { return f.size > 10 * 1024 * 1024; })) { toast("10MB를 초과하는 파일이 있습니다", true); return; }
 
     saveBtn.disabled = true; saveBtn.textContent = "저장 중...";
+    showBusy("메모를 저장하고 Git에 커밋하는 중…");
     Promise.all(files.map(function (f) {
       return readFileAsDataURL(f).then(function (u) { return { name: f.name, size: f.size, dataUrl: u }; });
     }))
       .then(function (fs) { return store.create({ title: $("memoTitle").value.trim(), content: content, tags: tags, files: fs }); })
-      .then(function () { toast("저장 및 Git 커밋 완료"); closeMemoModal(); return refresh(); })
+      .then(function () { closeMemoModal(); return refresh(); })
+      .then(function () { toast("저장 및 Git 커밋 완료"); })
       .catch(function (e) { toast(e.message || "저장 실패", true); })
-      .finally(function () { saveBtn.disabled = false; saveBtn.textContent = "저장 (Git 커밋)"; });
+      .finally(function () {
+        hideBusy();
+        saveBtn.disabled = false;
+        saveBtn.textContent = "저장 (Git 커밋)";
+      });
   });
 
   // ---- admin modal ----
