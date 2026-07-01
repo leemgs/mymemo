@@ -1,0 +1,13 @@
+{
+  "name": "mymemo",
+  "version": "1.0.0",
+  "description": "My Memo — Git 기반 온라인 메모 홈페이지 (정적 프론트엔드 + 저장 서버)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "license": "MIT"
+}
