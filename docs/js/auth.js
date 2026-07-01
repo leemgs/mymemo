@@ -18,16 +18,24 @@
   var input = document.getElementById("lockInput");
   var errEl = document.getElementById("lockError");
 
+  function signalUnlocked() {
+    window.__mymemoUnlocked = true;
+    window.dispatchEvent(new Event("mymemo:unlocked"));
+  }
+
   function unlock() {
     screen.classList.add("unlocked");
     document.body.classList.remove("locked");
     setTimeout(function () { screen.style.display = "none"; }, 350);
+    signalUnlocked();
   }
 
   // Already unlocked this session?
   if (sessionStorage.getItem(UNLOCK_KEY) === "1") {
     screen.style.display = "none";
     document.body.classList.remove("locked");
+    // Set flag synchronously so app.js (loaded next) starts loading immediately.
+    window.__mymemoUnlocked = true;
     return;
   }
 

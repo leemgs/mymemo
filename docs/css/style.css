@@ -272,6 +272,28 @@ body {
 }
 .icon-btn:hover { background: var(--dark-btn-hover); }
 
+/* Loading state */
+.loading-state {
+  text-align: center;
+  padding: 74px 20px 60px;
+  color: var(--text-muted);
+}
+.spinner {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 20px;
+  border: 5px solid #dde6f2;
+  border-top-color: var(--accent);
+  border-right-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: #4b5565; }
+.loading-timer { margin: 0; font-size: 30px; font-weight: 800; color: var(--accent); letter-spacing: 0.5px; }
+.loading-timer #loadingSecs { font-variant-numeric: tabular-nums; }
+.loading-unit { font-size: 17px; font-weight: 700; margin-left: 3px; }
+
 /* Empty state */
 .empty-state {
   text-align: center;
