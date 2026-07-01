@@ -8,6 +8,21 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+  <!-- Lock screen (soft access gate) -->
+  <div class="lock-screen" id="lockScreen">
+    <div class="lock-card">
+      <div class="lock-badge">🔒</div>
+      <h1 class="lock-brand"><span>📢</span> My Memo</h1>
+      <p class="lock-sub">접근하려면 암호를 입력하세요</p>
+      <form id="lockForm" class="lock-form" autocomplete="off">
+        <input type="password" id="lockInput" placeholder="암호를 입력하세요" autocomplete="current-password" />
+        <button type="submit" class="lock-btn">입장하기</button>
+      </form>
+      <p class="lock-error" id="lockError">&nbsp;</p>
+    </div>
+    <p class="lock-foot">📢 모두의 메모 · 인가된 사용자만 접근하세요</p>
+  </div>
+
   <div class="container">
     <!-- Header -->
     <header class="header-card">
@@ -120,6 +135,7 @@
 
   <div class="toast" id="toast" hidden></div>
 
+  <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
