@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Memo</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📢</text></svg>" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header-card">
+      <h1 class="brand"><span class="brand-icon">📢</span> My Memo</h1>
+      <div class="header-right">
+        <span class="server-note" id="serverNote">관리자PC가 꺼져있으면 페이지는 쉽니다</span>
+        <button class="btn-admin" id="adminBtn">⚙ 관리자 설정</button>
+      </div>
+    </header>
+
+    <!-- Status banner (shown when server is offline) -->
+    <div class="status-banner" id="statusBanner" hidden></div>
+
+    <!-- Memo grid -->
+    <main class="memo-grid" id="memoGrid"></main>
+
+    <!-- Empty / loading state -->
+    <div class="empty-state" id="emptyState" hidden>
+      <p>아직 메모가 없습니다. 오른쪽 아래 <strong>+</strong> 버튼으로 첫 메모를 남겨보세요.</p>
+    </div>
+  </div>
+
+  <!-- Floating add button -->
+  <button class="fab" id="fab" title="새 메모 작성">+</button>
+
+  <!-- New memo modal -->
+  <div class="modal-overlay" id="memoModal" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2>새 메모 작성</h2>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <form id="memoForm" class="modal-body">
+        <label class="field">
+          <span class="field-label">제목</span>
+          <input type="text" id="memoTitle" name="title" placeholder="제목을 입력하세요 (선택)" />
+        </label>
+        <label class="field">
+          <span class="field-label">내용 <em>*</em></span>
+          <textarea id="memoContent" name="content" rows="8" placeholder="메모 내용을 입력하세요" required></textarea>
+        </label>
+        <label class="field">
+          <span class="field-label">태그</span>
+          <input type="text" id="memoTags" name="tags" placeholder="쉼표로 구분 (예: 반도체, 협약, 공지)" />
+        </label>
+        <label class="field">
+          <span class="field-label">파일 첨부</span>
+          <input type="file" id="memoFiles" name="files" multiple />
+          <span class="field-hint">여러 파일 선택 가능 · 파일당 최대 10MB</span>
+        </label>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelBtn">취소</button>
+          <button type="submit" class="btn-primary" id="saveBtn">저장 (Git 커밋)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin settings modal -->
+  <div class="modal-overlay" id="adminModal" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2>⚙ 관리자 설정</h2>
+        <button class="modal-close" id="adminClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label class="field">
+          <span class="field-label">저장 방식</span>
+          <select id="cfgMode">
+            <option value="github">GitHub API (정적 호스팅 · GitHub Pages)</option>
+            <option value="server">로컬 서버 (server.js)</option>
+          </select>
+          <span class="field-hint">GitHub Pages처럼 서버 없이 배포할 때는 <b>GitHub API</b>를 사용합니다. 브라우저에서 직접 저장소에 Git 커밋합니다.</span>
+        </label>
+
+        <div id="githubFields">
+          <div class="field-row">
+            <label class="field"><span class="field-label">Owner</span><input type="text" id="cfgOwner" placeholder="leemgs" /></label>
+            <label class="field"><span class="field-label">Repo</span><input type="text" id="cfgRepo" placeholder="mymemo" /></label>
+            <label class="field"><span class="field-label">Branch</span><input type="text" id="cfgBranch" placeholder="main" /></label>
+          </div>
+          <label class="field">
+            <span class="field-label">GitHub 토큰 (쓰기 권한)</span>
+            <input type="password" id="cfgToken" placeholder="github_pat_... (저장할 때만 필요)" autocomplete="off" />
+            <span class="field-hint">
+              메모 <b>저장·삭제(Git 커밋)</b>에만 필요합니다. 열람만 하면 비워도 됩니다.<br />
+              GitHub → Settings → Developer settings → <b>Fine-grained personal access token</b>을 만들고,
+              대상 저장소에 <b>Repository permissions → Contents: Read and write</b> 권한을 부여하세요.<br />
+              토큰은 이 브라우저(localStorage)에만 저장되며 서버로 전송되지 않습니다.
+            </span>
+          </label>
+        </div>
+
+        <div id="serverFields" hidden>
+          <label class="field">
+            <span class="field-label">API 서버 주소</span>
+            <input type="text" id="cfgApiBase" placeholder="예: http://10.253.2.128:9999" />
+            <span class="field-hint">server.js를 실행 중인 관리자 PC의 주소입니다.</span>
+          </label>
+        </div>
+
+        <div class="admin-status" id="adminStatus"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="adminCheckBtn">연결 확인</button>
+          <button type="button" class="btn-primary" id="adminSaveBtn">저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
