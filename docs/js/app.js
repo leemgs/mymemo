@@ -296,13 +296,38 @@
     }
   }
 
+  // ---- loading indicator (animated spinner + elapsed seconds) ----
+  var loadingState = $("loadingState");
+  var loadTimer = null, loadStart = 0;
+  function showLoading() {
+    emptyState.hidden = true;
+    memoGrid.style.display = "none";
+    statusBanner.hidden = true;
+    loadingState.hidden = false;
+    loadStart = Date.now();
+    $("loadingSecs").textContent = "0.0";
+    clearInterval(loadTimer);
+    loadTimer = setInterval(function () {
+      $("loadingSecs").textContent = ((Date.now() - loadStart) / 1000).toFixed(1);
+    }, 100);
+  }
+  function hideLoading() {
+    clearInterval(loadTimer);
+    loadTimer = null;
+    loadingState.hidden = true;
+    memoGrid.style.display = "";
+  }
+
   function refresh() {
+    showLoading();
     return store.list().then(function (memos) {
+      hideLoading();
       currentMemos = memos;
       readOnly = !store.canWrite();
       updateBanner();
       render(memos);
     }).catch(function (e) {
+      hideLoading();
       readOnly = true;
       serverUp = false;
       statusBanner.hidden = false;
@@ -437,5 +462,11 @@
   });
 
   // ---- init ----
-  refresh();
+  // Start loading memos only once the access gate is unlocked, so the spinner
+  // and timer are visible right when the user enters.
+  if (window.__mymemoUnlocked) {
+    refresh();
+  } else {
+    window.addEventListener("mymemo:unlocked", function () { refresh(); }, { once: true });
+  }
 })();
