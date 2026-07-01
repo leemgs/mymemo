@@ -1,0 +1,68 @@
+name: Deploy My Memo to GitHub Pages
+
+# repo Secret(MYMEMO_WRITE_TOKEN)을 docs/config.js 에 주입한 뒤 Pages 로 배포합니다.
+# 토큰은 배포 결과물에만 포함되며 저장소에는 커밋되지 않습니다.
+#
+# 사전 준비:
+#  1) Settings → Secrets and variables → Actions → New repository secret
+#     - Name : MYMEMO_WRITE_TOKEN
+#     - Value: fine-grained PAT (이 저장소의 Contents: Read and write 권한만)
+#  2) Settings → Pages → Build and deployment → Source: "GitHub Actions"
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inject runtime config (token from repo Secret)
+        env:
+          TOKEN: ${{ secrets.MYMEMO_WRITE_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO_FULL: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          REPO="${REPO_FULL#*/}"
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::MYMEMO_WRITE_TOKEN 시크릿이 비어 있습니다. 배포는 되지만 저장(쓰기) 기능은 비활성화됩니다."
+          fi
+          cat > docs/config.js <<EOF
+          /* 배포 시 자동 생성됨 (.github/workflows/deploy.yml). 저장소에 커밋되지 않습니다. */
+          window.MYMEMO_CONFIG = {
+            owner: "${OWNER}",
+            repo: "${REPO}",
+            branch: "${BRANCH}",
+            token: "${TOKEN}"
+          };
+          EOF
+          echo "config.js 생성 완료 (owner=${OWNER}, repo=${REPO}, branch=${BRANCH}, token=${TOKEN:+설정됨})"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

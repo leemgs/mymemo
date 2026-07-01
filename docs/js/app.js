@@ -30,10 +30,23 @@
   }
   function loadCfg() {
     var d = detectDefaults();
+    // Config injected at deploy time from repo Secret (docs/config.js).
+    var inj = window.MYMEMO_CONFIG || {};
     var base = { mode: "github", owner: d.owner, repo: d.repo, branch: "main",
                  dataDir: "data", token: "", apiBase: "" };
-    try { return Object.assign(base, JSON.parse(localStorage.getItem(CFG_KEY) || "{}")); }
-    catch (e) { return base; }
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(CFG_KEY) || "{}"); } catch (e) {}
+    // Precedence: local admin overrides > injected repo config > detected defaults.
+    var merged = Object.assign(base, cleanEmpty(inj), saved);
+    // Injected token is the fallback when the admin hasn't set one on this browser.
+    if (!merged.token && inj.token) merged.token = inj.token;
+    return merged;
+  }
+  // Drop empty-string fields so they don't override real defaults.
+  function cleanEmpty(o) {
+    var r = {};
+    Object.keys(o || {}).forEach(function (k) { if (o[k] !== "" && o[k] != null) r[k] = o[k]; });
+    return r;
   }
   function saveCfg() { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
 
@@ -354,6 +367,8 @@
     $("cfgToken").value = cfg.token;
     $("cfgApiBase").value = cfg.apiBase;
     syncModeFields();
+    var inj = window.MYMEMO_CONFIG || {};
+    $("tokenInjectedNote").hidden = !inj.token;
     $("adminStatus").textContent = ""; $("adminStatus").className = "admin-status";
     adminModal.hidden = false;
   }

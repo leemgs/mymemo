@@ -35,28 +35,51 @@ mymemo/
 └─ package.json
 ```
 
-## GitHub Pages 배포
+## 접근 암호 (가벼운 차단)
 
-1. 이 저장소를 GitHub에 push 합니다. (`./data/index.json` 포함)
-2. 저장소 **Settings → Pages → Build and deployment**
-   - Source: **Deploy from a branch**
-   - Branch: `main` / 폴더: **`/docs`**
-3. 잠시 후 `https://<사용자>.github.io/<저장소>/` 에서 열립니다.
-   (예: `https://leemgs.github.io/mymemo/`)
+홈페이지에 들어가려면 잠금화면에서 암호를 입력해야 합니다. (기본: `leemgs75`)
+바꾸려면 `docs/js/auth.js`의 `PASS_HASH`를 새 암호의 SHA-256 해시로 교체하세요.
+
+```bash
+printf '%s' '새암호' | sha256sum   # 출력된 해시를 PASS_HASH에 붙여넣기
+```
+
+> ⚠️ 정적 사이트라 브라우저에서만 검사하는 **가벼운 차단**입니다. 저장소가 공개면
+> 데이터/설정 파일에 URL로 직접 접근할 수 있으니 기밀 보호용이 아닙니다.
+
+## 토큰(PAT)으로 저장 활성화
+
+저장·삭제는 저장소에 커밋하므로 **쓰기 권한 토큰(fine-grained PAT)** 이 필요합니다. (열람만 하면 불필요)
+
+발급: GitHub → **Settings → Developer settings → Fine-grained personal access tokens**
+→ Repository access: `mymemo` → **Repository permissions → Contents: Read and write**
+
+토큰을 사용하는 방법은 두 가지입니다.
+
+### 방법 A) repo 환경변수(Secret) + Actions 주입 — 팀 공용 (현재 기본)
+
+토큰을 저장소에 저장해 두면, 배포 시 `docs/config.js`에 자동 주입되어
+**누가 접속하든(암호만 알면) 저장 가능**합니다.
+
+1. **Settings → Secrets and variables → Actions → New repository secret**
+   - Name: `MYMEMO_WRITE_TOKEN`
+   - Value: 위에서 만든 `github_pat_...`
+2. **Settings → Pages → Build and deployment → Source: `GitHub Actions`** 로 변경
+3. `main`에 push하면 [.github/workflows/deploy.yml](.github/workflows/deploy.yml)이
+   토큰을 주입해 Pages로 배포합니다. (토큰은 배포 결과물에만 있고 저장소에는 커밋되지 않음)
+
+> 🔴 **보안 경고**: 이 방식은 토큰이 **공개된 `config.js`로 내려받힙니다**
+> (`https://<user>.github.io/<repo>/config.js`). 접근 암호로도 막히지 않습니다.
+> 반드시 **`mymemo` 저장소의 Contents R/W 로만 범위를 좁힌** 토큰을 쓰고,
+> 유출 시 즉시 폐기(revoke)하세요. GitHub 비밀 스캐닝이 자동 폐기할 수도 있습니다.
+
+### 방법 B) 브라우저에만 저장 — 개인용 (더 안전)
+
+토큰을 공개하지 않고, **⚙ 관리자 설정 → GitHub 토큰**에 직접 입력합니다.
+해당 브라우저의 localStorage에만 저장되어 외부로 노출되지 않습니다.
+(방법 A의 Secret을 비워 두면 이 방식만 동작합니다. Pages Source는 `main`/`docs` 브랜치여도 됩니다.)
 
 Owner/Repo는 접속 URL에서 자동 인식되며, 필요하면 **⚙ 관리자 설정**에서 바꿀 수 있습니다.
-
-## 메모 저장을 위한 토큰(PAT) 발급
-
-저장·삭제는 저장소에 커밋하므로 쓰기 권한 토큰이 필요합니다. (열람만 하면 불필요)
-
-1. GitHub → **Settings → Developer settings → Fine-grained personal access tokens → Generate new token**
-2. **Repository access**: 대상 저장소(`mymemo`) 선택
-3. **Repository permissions → Contents: Read and write** 부여
-4. 생성된 `github_pat_...` 토큰을 홈페이지 **⚙ 관리자 설정 → GitHub 토큰**에 입력
-
-> 토큰은 해당 **브라우저의 localStorage에만** 저장되며 외부 서버로 전송되지 않습니다.
-> 개인 관리자 PC에서만 입력하세요.
 
 ## 사용법
 
