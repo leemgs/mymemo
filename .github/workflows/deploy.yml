@@ -55,8 +55,21 @@ jobs:
           EOF
           echo "config.js 생성 완료 (owner=${OWNER}, repo=${REPO}, branch=${BRANCH}, token=${TOKEN:+설정됨})"
 
+      - name: Ensure Pages source = GitHub Actions (best-effort)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # 브랜치 배포(legacy)면 주입된 config.js가 무시됩니다. workflow 로 전환 시도.
+          if gh api -X PUT "repos/${{ github.repository }}/pages" -f build_type=workflow >/dev/null 2>&1; then
+            echo "Pages build_type → workflow 로 전환했습니다."
+          else
+            echo "::warning::Pages 소스를 자동 전환하지 못했습니다(권한). Settings → Pages → Source 를 'GitHub Actions'로 직접 변경하세요."
+          fi
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
