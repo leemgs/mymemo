@@ -48,7 +48,13 @@
     Object.keys(o || {}).forEach(function (k) { if (o[k] !== "" && o[k] != null) r[k] = o[k]; });
     return r;
   }
-  function saveCfg() { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+  function saveCfg() {
+    var inj = window.MYMEMO_CONFIG || {};
+    var out = Object.assign({}, cfg);
+    // Don't cache the injected Secret token; it's re-applied from config.js on load.
+    if (inj.token && out.token === inj.token) out.token = "";
+    localStorage.setItem(CFG_KEY, JSON.stringify(out));
+  }
 
   var cfg = loadCfg();
   var currentMemos = [];
@@ -364,11 +370,13 @@
     $("cfgOwner").value = cfg.owner;
     $("cfgRepo").value = cfg.repo;
     $("cfgBranch").value = cfg.branch;
-    $("cfgToken").value = cfg.token;
     $("cfgApiBase").value = cfg.apiBase;
     syncModeFields();
-    var inj = window.MYMEMO_CONFIG || {};
-    $("tokenInjectedNote").hidden = !inj.token;
+    // Token injected from repo Secret → hide the input, show status only.
+    var injected = !!(window.MYMEMO_CONFIG && window.MYMEMO_CONFIG.token);
+    $("tokenInjectedBox").hidden = !injected;
+    $("tokenInputBox").hidden = injected;
+    $("cfgToken").value = injected ? "" : (cfg.token || "");
     $("adminStatus").textContent = ""; $("adminStatus").className = "admin-status";
     adminModal.hidden = false;
   }
@@ -416,6 +424,9 @@
   $("adminCheckBtn").addEventListener("click", checkConnection);
   $("adminSaveBtn").addEventListener("click", function () {
     cfg = Object.assign({}, cfg, readAdminForm());
+    // Keep using the injected Secret token when the admin didn't type a personal one.
+    var inj = window.MYMEMO_CONFIG || {};
+    if (!cfg.token && inj.token) cfg.token = inj.token;
     saveCfg(); closeAdminModal(); toast("설정을 저장했습니다"); refresh();
   });
   [memoModal, adminModal].forEach(function (m) {
