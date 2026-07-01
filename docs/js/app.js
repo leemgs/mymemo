@@ -60,6 +60,7 @@
   var currentMemos = [];
   var readOnly = true;
   var serverUp = false;
+  var tokenInvalid = false; // set when GitHub rejects the token (401) during read
 
   // ---- DOM helpers ----
   var $ = function (id) { return document.getElementById(id); };
@@ -178,10 +179,12 @@
   }
   function githubList() {
     return ghApi("GET", "/contents/" + cfg.dataDir + "/index.json?ref=" + encodeURIComponent(cfg.branch))
-      .then(function (res) { return (JSON.parse(b64decode(res.content)).memos) || []; })
+      .then(function (res) { tokenInvalid = false; return (JSON.parse(b64decode(res.content)).memos) || []; })
       .catch(function (e) {
         if (e.status === 404) return [];
-        // API rate-limited / unreachable → fall back to the raw CDN copy.
+        // 401: 토큰이 만료/폐기됨. 읽기는 공개라 토큰이 필요 없으므로 열람은 계속되도록 폴백.
+        if (e.status === 401) { tokenInvalid = true; return rawList(); }
+        // 403(API 한도) / 네트워크 오류 → raw CDN 폴백.
         if (e.status === 403 || e.status == null) return rawList();
         throw e;
       });
@@ -235,7 +238,7 @@
 
   // ---- store abstraction ----
   var store = {
-    canWrite: function () { return cfg.mode === "server" ? serverUp : !!cfg.token; },
+    canWrite: function () { return cfg.mode === "server" ? serverUp : (!!cfg.token && !tokenInvalid); },
     attachmentUrl: function (stored) {
       if (cfg.mode === "server") return sbase() + "/data/attachments/" + encodeURIComponent(stored);
       return "https://raw.githubusercontent.com/" + cfg.owner + "/" + cfg.repo + "/" +
@@ -291,6 +294,8 @@
     statusBanner.hidden = false;
     if (cfg.mode === "server") {
       statusBanner.textContent = "⚠ 관리자 PC(server.js)에 연결할 수 없어 읽기 전용입니다. ⚙ 관리자 설정에서 서버 주소를 확인하세요.";
+    } else if (tokenInvalid) {
+      statusBanner.textContent = "⚠ GitHub 토큰이 유효하지 않아(만료·폐기) 열람 전용으로 표시 중입니다. 새 토큰으로 갱신하세요. (공개 배포된 토큰은 GitHub 보안 스캐닝에 의해 자동 폐기될 수 있습니다.)";
     } else {
       statusBanner.textContent = "🔒 읽기 전용 모드입니다. 메모를 저장하려면 ⚙ 관리자 설정에서 GitHub 토큰을 입력하세요.";
     }
@@ -319,6 +324,7 @@
   }
 
   function refresh() {
+    tokenInvalid = false;
     showLoading();
     return store.list().then(function (memos) {
       hideLoading();
