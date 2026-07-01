@@ -104,17 +104,26 @@
             <label class="field"><span class="field-label">Repo</span><input type="text" id="cfgRepo" placeholder="mymemo" /></label>
             <label class="field"><span class="field-label">Branch</span><input type="text" id="cfgBranch" placeholder="main" /></label>
           </div>
-          <label class="field">
+          <div class="field">
             <span class="field-label">GitHub 토큰 (쓰기 권한)</span>
-            <input type="password" id="cfgToken" placeholder="github_pat_... (저장할 때만 필요)" autocomplete="off" />
-            <span class="field-hint" id="tokenInjectedNote" hidden>✓ repo 환경변수(Secret)에서 토큰이 주입되어 있습니다. 이 브라우저에만 다른 토큰을 쓰려면 위에 입력하세요.</span>
-            <span class="field-hint">
-              메모 <b>저장·삭제(Git 커밋)</b>에만 필요합니다. 열람만 하면 비워도 됩니다.<br />
-              GitHub → Settings → Developer settings → <b>Fine-grained personal access token</b>을 만들고,
-              대상 저장소에 <b>Repository permissions → Contents: Read and write</b> 권한을 부여하세요.<br />
-              토큰은 이 브라우저(localStorage)에만 저장되며 서버로 전송되지 않습니다.
-            </span>
-          </label>
+
+            <!-- Secret 주입 시: 입력칸 숨기고 상태만 표시 -->
+            <div id="tokenInjectedBox" hidden>
+              <div class="token-ok">✓ 저장 활성화됨 — repo 환경변수(Secret) <code>MYMEMO_WRITE_TOKEN</code> 토큰을 사용 중입니다.</div>
+              <span class="field-hint">토큰은 저장소 Settings의 Secret에서 관리됩니다. 여기서 입력할 필요가 없습니다.</span>
+            </div>
+
+            <!-- Secret 미주입 시: 직접 입력 (개인용 / 로컬) -->
+            <div id="tokenInputBox">
+              <input type="password" id="cfgToken" placeholder="github_pat_... (저장할 때만 필요)" autocomplete="off" />
+              <span class="field-hint">
+                메모 <b>저장·삭제(Git 커밋)</b>에만 필요합니다. 열람만 하면 비워도 됩니다.<br />
+                GitHub → Settings → Developer settings → <b>Fine-grained personal access token</b>을 만들고,
+                대상 저장소에 <b>Repository permissions → Contents: Read and write</b> 권한을 부여하세요.<br />
+                토큰은 이 브라우저(localStorage)에만 저장되며 서버로 전송되지 않습니다.
+              </span>
+            </div>
+          </div>
         </div>
 
         <div id="serverFields" hidden>
