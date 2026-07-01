@@ -147,10 +147,25 @@
       .then(function (c) { return ghApi("PATCH", "/git/refs/heads/" + encodeURIComponent(cfg.branch), { sha: c.sha }); });
   }
 
+  function rawList() {
+    // Fallback read via raw CDN (no API rate limit; may lag ~minutes on updates).
+    var url = "https://raw.githubusercontent.com/" + cfg.owner + "/" + cfg.repo + "/" +
+      cfg.branch + "/" + cfg.dataDir + "/index.json?t=" + new Date().getTime();
+    return fetch(url, { cache: "no-store" }).then(function (r) {
+      if (r.status === 404) return [];
+      if (!r.ok) throw new Error("raw HTTP " + r.status);
+      return r.json().then(function (j) { return j.memos || []; });
+    });
+  }
   function githubList() {
     return ghApi("GET", "/contents/" + cfg.dataDir + "/index.json?ref=" + encodeURIComponent(cfg.branch))
       .then(function (res) { return (JSON.parse(b64decode(res.content)).memos) || []; })
-      .catch(function (e) { if (e.status === 404) return []; throw e; });
+      .catch(function (e) {
+        if (e.status === 404) return [];
+        // API rate-limited / unreachable → fall back to the raw CDN copy.
+        if (e.status === 403 || e.status == null) return rawList();
+        throw e;
+      });
   }
   function githubCreate(payload) {
     return githubList().then(function (memos) {
