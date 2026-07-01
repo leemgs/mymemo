@@ -9,29 +9,38 @@ Git 저장소 기반의 **온라인 메모 홈페이지**입니다.
 
 ## 동작 방식
 
+- **접근 (잠금화면)** — 페이지에 들어가려면 암호를 입력해야 합니다. (가벼운 차단, 아래 참고)
 - **열람 (누구나)** — GitHub Contents API로 `./data/index.json`을 읽어 카드로 표시합니다.
   공개 저장소면 토큰 없이도 열람됩니다. (익명은 시간당 60회 제한)
+  API 한도(403) 시 자동으로 `raw.githubusercontent.com`으로 폴백해 계속 열람됩니다.
 - **저장/삭제 (관리자)** — GitHub Git Data API(blob → tree → commit → ref)로
   `./data/`에 파일을 만들고 **한 번의 커밋**으로 반영합니다.
-  이때 **쓰기 권한 토큰(PAT)** 이 필요합니다.
+  이때 **쓰기 권한 토큰(PAT)** 이 필요합니다. (토큰은 관리자가 브라우저에 입력하거나,
+  repo Secret에서 배포 시 주입 — 아래 두 방법 참고)
 
 ```
-브라우저(JS)  ──GitHub API(REST)──▶  github.com/<owner>/<repo>  ──▶  ./data/ 에 커밋
+잠금화면(암호)  ▶  브라우저(JS)  ──GitHub API(REST)──▶  github.com/<owner>/<repo>  ──▶  ./data/ 에 커밋
+                                └ 읽기 폴백: raw.githubusercontent.com
 ```
 
 ## 구조
 
 ```
 mymemo/
-├─ docs/                 # 정적 프론트엔드 (GitHub Pages 소스 폴더로 지정)
-│  ├─ index.html
+├─ docs/                     # 정적 프론트엔드 (GitHub Pages 소스)
+│  ├─ index.html             #   잠금화면 + 메모 목록 + 작성/관리자 모달
+│  ├─ config.js              #   런타임 설정 자리표시자 (배포 시 토큰 주입)
 │  ├─ css/style.css
-│  └─ js/app.js          # GitHub API 읽기/커밋, 목록·작성·삭제 로직
-├─ data/                 # 메모 저장소 (여기에 커밋됩니다)
-│  ├─ index.json         #   전체 메모 목록 (열람 소스)
-│  ├─ memo-<id>.json     #   메모 1건 = 파일 1개
-│  └─ attachments/       #   첨부파일
-├─ server.js             # (선택) 로컬 자체 호스팅용 Node 서버
+│  └─ js/
+│     ├─ auth.js             #   접근 암호 잠금화면 (SHA-256 비교)
+│     └─ app.js              #   GitHub API 읽기/커밋, 목록·작성·삭제 로직
+├─ data/                     # 메모 저장소 (여기에 커밋됩니다)
+│  ├─ index.json             #   전체 메모 목록 (열람 소스)
+│  ├─ memo-<id>.json         #   메모 1건 = 파일 1개
+│  └─ attachments/           #   첨부파일
+├─ .github/workflows/
+│  └─ deploy.yml             # repo Secret 토큰 주입 후 Pages(Actions) 배포
+├─ server.js                 # (선택) 로컬 자체 호스팅용 Node 서버
 └─ package.json
 ```
 
