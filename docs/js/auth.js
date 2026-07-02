@@ -11,7 +11,7 @@
 
   var UNLOCK_KEY = "mymemo_unlocked";
   // SHA-256 of the access password (변경: ⚙ 관리자 설정 → 접근 암호 변경)
-  var PASS_HASH = "ea0f3f1337e2c53314fddb06dc123e75a0b595f27b24a194a0df5ae3f3464c3c";
+  var PASS_HASH = "75685048a6cbb5b83c924be356248ea11eb0e1c2f48cec9794d3a72e3850806e";
   // Expose the current digest so the admin "접근 암호 변경" menu (app.js) can
   // verify the current password before committing a new one.
   window.MYMEMO_PASS_HASH = PASS_HASH;
