@@ -52,7 +52,7 @@ function sendJSON(res, code, obj) {
   res.writeHead(code, {
     "Content-Type": "application/json; charset=utf-8",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Cache-Control": "no-store"
   });
@@ -171,6 +171,63 @@ async function handleCreate(req, res) {
   sendJSON(res, 201, { ok: true, memo: memo });
 }
 
+async function handleUpdate(req, res, id) {
+  if (!/^[\w-]+$/.test(id)) return sendJSON(res, 400, { error: "잘못된 id" });
+  const memoFile = path.join(DATA_DIR, "memo-" + id + ".json");
+  if (!fs.existsSync(memoFile)) return sendJSON(res, 404, { error: "메모를 찾을 수 없습니다" });
+
+  const raw = await readBody(req);
+  let data;
+  try { data = JSON.parse(raw.toString("utf8")); } catch (e) { return sendJSON(res, 400, { error: "잘못된 JSON" }); }
+  const content = (data.content || "").trim();
+  if (!content) return sendJSON(res, 400, { error: "내용은 필수입니다" });
+
+  let existing = {};
+  try { existing = JSON.parse(fs.readFileSync(memoFile, "utf8")); } catch (e) {}
+
+  const keep = Array.isArray(data.keep) ? data.keep : (existing.attachments || []).map(a => a.stored);
+  const commitPaths = [path.join("data", "memo-" + id + ".json"), "data/index.json"];
+
+  // 유지할 첨부만 남기고 나머지는 삭제
+  const attachments = (existing.attachments || []).filter(a => keep.indexOf(a.stored) !== -1);
+  (existing.attachments || []).forEach(a => {
+    if (keep.indexOf(a.stored) === -1) {
+      const p = path.join(ATTACH_DIR, a.stored);
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+      commitPaths.push(path.join("data", "attachments", a.stored));
+    }
+  });
+  // 새로 추가된 첨부
+  (data.files || []).forEach((f, i) => {
+    const buf = decodeDataUrl(f.dataUrl);
+    if (!buf) return;
+    const stored = id + "__n" + Date.now() + i + "__" + safeName(f.name);
+    fs.writeFileSync(path.join(ATTACH_DIR, stored), buf);
+    attachments.push({ name: f.name, size: buf.length, stored: stored });
+    commitPaths.push(path.join("data", "attachments", stored));
+  });
+
+  const memo = {
+    id: id,
+    title: (data.title || "").trim(),
+    content: content,
+    tags: Array.isArray(data.tags) ? data.tags.filter(Boolean) : [],
+    attachments: attachments,
+    createdAt: existing.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  fs.writeFileSync(memoFile, JSON.stringify(memo, null, 2));
+  writeIndex(readMemos());
+
+  const title = memo.title || content.slice(0, 30).replace(/\s+/g, " ");
+  try {
+    await gitCommit("memo: edit \"" + title + "\" (" + id + ")", commitPaths);
+  } catch (e) {
+    return sendJSON(res, 500, { error: "수정은 되었으나 Git 커밋에 실패했습니다: " + e.message, memo: memo });
+  }
+  sendJSON(res, 200, { ok: true, memo: memo });
+}
+
 async function handleDelete(res, id) {
   if (!/^[\w-]+$/.test(id)) return sendJSON(res, 400, { error: "잘못된 id" });
   const memoFile = path.join(DATA_DIR, "memo-" + id + ".json");
@@ -244,6 +301,9 @@ const server = http.createServer(async (req, res) => {
     }
     if (urlPath === "/api/memos" && req.method === "POST") {
       return await handleCreate(req, res);
+    }
+    if (urlPath.startsWith("/api/memos/") && req.method === "PUT") {
+      return await handleUpdate(req, res, urlPath.slice("/api/memos/".length));
     }
     if (urlPath.startsWith("/api/memos/") && req.method === "DELETE") {
       return await handleDelete(res, urlPath.slice("/api/memos/".length));
