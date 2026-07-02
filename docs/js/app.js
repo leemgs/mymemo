@@ -219,6 +219,44 @@
       return commitFiles("memo: remove " + id, changes);
     });
   }
+  function githubUpdate(id, payload) {
+    return githubList().then(function (memos) {
+      var idx = -1, existing = null;
+      memos.forEach(function (m, i) { if (m.id === id) { existing = m; idx = i; } });
+      if (!existing) throw new Error("수정할 메모를 찾을 수 없습니다");
+
+      var keep = payload.keep || [];
+      var changes = [];
+      // Attachments to keep (checked), and delete the rest.
+      var attachments = (existing.attachments || []).filter(function (a) { return keep.indexOf(a.stored) !== -1; });
+      (existing.attachments || []).forEach(function (a) {
+        if (keep.indexOf(a.stored) === -1) changes.push({ path: cfg.dataDir + "/attachments/" + a.stored, remove: true });
+      });
+      // Newly added attachments.
+      (payload.files || []).forEach(function (f, i) {
+        var b64 = (f.dataUrl.split(",")[1]) || "";
+        var stored = id + "__n" + Date.now() + i + "__" + safeName(f.name);
+        changes.push({ path: cfg.dataDir + "/attachments/" + stored, contentBase64: b64 });
+        attachments.push({ name: f.name, size: f.size, stored: stored });
+      });
+
+      var memo = {
+        id: id,
+        title: payload.title || "",
+        content: payload.content,
+        tags: payload.tags || [],
+        attachments: attachments,
+        createdAt: existing.createdAt,
+        updatedAt: new Date().toISOString()
+      };
+      changes.push({ path: cfg.dataDir + "/memo-" + id + ".json", contentBase64: b64encode(JSON.stringify(memo, null, 2)) });
+      var newMemos = memos.slice();
+      newMemos[idx] = memo;
+      changes.push({ path: cfg.dataDir + "/index.json", contentBase64: b64encode(JSON.stringify({ memos: newMemos }, null, 2)) });
+      var title = memo.title || memo.content.slice(0, 30).replace(/\s+/g, " ");
+      return commitFiles('memo: edit "' + title + '" (' + id + ")", changes).then(function () { return memo; });
+    });
+  }
 
   // ---- local server (optional self-host) ----
   function sbase() { return (cfg.apiBase || "").replace(/\/+$/, ""); }
@@ -235,6 +273,10 @@
     return fetch(sbase() + "/api/memos/" + encodeURIComponent(id), { method: "DELETE" })
       .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "삭제 실패"); }); });
   }
+  function serverUpdate(id, payload) {
+    return fetch(sbase() + "/api/memos/" + encodeURIComponent(id), { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "수정 실패"); return j.memo; }); });
+  }
 
   // ---- store abstraction ----
   var store = {
@@ -246,6 +288,7 @@
     },
     list: function () { return cfg.mode === "server" ? serverList() : githubList(); },
     create: function (p) { return cfg.mode === "server" ? serverCreate(p) : githubCreate(p); },
+    update: function (id, p) { return cfg.mode === "server" ? serverUpdate(id, p) : githubUpdate(id, p); },
     remove: function (id) { return cfg.mode === "server" ? serverRemove(id) : githubRemove(id); }
   };
 
@@ -273,9 +316,12 @@
           (a.size ? ' <span style="color:#8a94a6">(' + humanSize(a.size) + ")</span>" : "") + "</a>";
       }).join("") + "</div>";
     }
-    html += '<div class="memo-footer"><span class="memo-date">' + esc(fmtDate(m.createdAt)) + "</span>" +
+    var dateText = fmtDate(m.createdAt) + (m.updatedAt ? " (수정됨)" : "");
+    html += '<div class="memo-footer"><span class="memo-date">' + esc(dateText) + "</span>" +
       '<span class="memo-actions"><button class="icon-btn" data-act="copy">⧉ 복사</button>' +
-      (readOnly ? "" : '<button class="icon-btn" data-act="del">삭제</button>') + "</span></div>";
+      (readOnly ? "" :
+        '<button class="icon-btn" data-act="edit">수정</button>' +
+        '<button class="icon-btn" data-act="del">삭제</button>') + "</span></div>";
     el.innerHTML = html;
 
     el.querySelector('[data-act="copy"]').addEventListener("click", function () {
@@ -286,6 +332,8 @@
     });
     var del = el.querySelector('[data-act="del"]');
     if (del) del.addEventListener("click", function () { removeMemo(m.id); });
+    var edit = el.querySelector('[data-act="edit"]');
+    if (edit) edit.addEventListener("click", function () { openMemoModal(m); });
     return el;
   }
 
@@ -379,40 +427,88 @@
       .finally(function () { hideBusy(); });
   }
 
-  // ---- new memo modal ----
+  // ---- new / edit memo modal ----
   var memoModal = $("memoModal"), memoForm = $("memoForm");
-  function openMemoModal() {
+  var editingId = null;
+
+  function renderExistingAttachments(memo) {
+    var field = $("existingAttachField");
+    var listEl = $("existingAttachList");
+    listEl.innerHTML = "";
+    var atts = (memo && memo.attachments) || [];
+    if (!atts.length) { field.hidden = true; return; }
+    field.hidden = false;
+    atts.forEach(function (a) {
+      var row = document.createElement("label");
+      row.className = "existing-attach-item";
+      row.innerHTML = '<input type="checkbox" checked data-stored="' + esc(a.stored) + '" /> ' +
+        '<span>📎 ' + esc(a.name) + (a.size ? " (" + humanSize(a.size) + ")" : "") + "</span>";
+      listEl.appendChild(row);
+    });
+  }
+
+  function openMemoModal(memo) {
     if (readOnly) {
       openAdminModal();
       toast(cfg.mode === "server" ? "서버가 오프라인이라 저장할 수 없습니다" : "저장하려면 GitHub 토큰이 필요합니다", true);
       return;
     }
-    memoForm.reset(); memoModal.hidden = false; $("memoTitle").focus();
+    memoForm.reset();
+    if (memo && memo.id) {
+      editingId = memo.id;
+      $("memoModalTitle").textContent = "메모 수정";
+      $("memoTitle").value = memo.title || "";
+      $("memoContent").value = memo.content || "";
+      $("memoTags").value = (memo.tags || []).join(", ");
+      $("fileFieldLabel").textContent = "첨부파일 추가";
+      $("saveBtn").textContent = "수정 저장 (Git 커밋)";
+      renderExistingAttachments(memo);
+    } else {
+      editingId = null;
+      $("memoModalTitle").textContent = "새 메모 작성";
+      $("fileFieldLabel").textContent = "파일 첨부";
+      $("saveBtn").textContent = "저장 (Git 커밋)";
+      $("existingAttachField").hidden = true;
+      $("existingAttachList").innerHTML = "";
+    }
+    memoModal.hidden = false;
+    $("memoTitle").focus();
   }
-  function closeMemoModal() { memoModal.hidden = true; }
+  function closeMemoModal() { memoModal.hidden = true; editingId = null; }
 
   memoForm.addEventListener("submit", function (e) {
     e.preventDefault();
     var saveBtn = $("saveBtn");
+    var isEdit = !!editingId;
+    var idForEdit = editingId;
     var content = $("memoContent").value.trim();
     if (!content) { toast("내용을 입력하세요", true); return; }
     var tags = $("memoTags").value.split(",").map(function (t) { return t.trim(); }).filter(Boolean);
     var files = Array.prototype.slice.call($("memoFiles").files);
     if (files.some(function (f) { return f.size > 10 * 1024 * 1024; })) { toast("10MB를 초과하는 파일이 있습니다", true); return; }
 
-    saveBtn.disabled = true; saveBtn.textContent = "저장 중...";
-    showBusy("메모를 저장하고 Git에 커밋하는 중…");
+    // 유지할 기존 첨부파일 (체크된 것)
+    var keep = Array.prototype.slice.call($("existingAttachList").querySelectorAll('input[type="checkbox"]:checked'))
+      .map(function (c) { return c.getAttribute("data-stored"); });
+
+    var defaultBtnText = isEdit ? "수정 저장 (Git 커밋)" : "저장 (Git 커밋)";
+    saveBtn.disabled = true; saveBtn.textContent = isEdit ? "수정 중..." : "저장 중...";
+    showBusy((isEdit ? "메모를 수정하고" : "메모를 저장하고") + " Git에 커밋하는 중…");
     Promise.all(files.map(function (f) {
       return readFileAsDataURL(f).then(function (u) { return { name: f.name, size: f.size, dataUrl: u }; });
     }))
-      .then(function (fs) { return store.create({ title: $("memoTitle").value.trim(), content: content, tags: tags, files: fs }); })
+      .then(function (fs) {
+        var payload = { title: $("memoTitle").value.trim(), content: content, tags: tags, files: fs };
+        if (isEdit) { payload.keep = keep; return store.update(idForEdit, payload); }
+        return store.create(payload);
+      })
       .then(function () { closeMemoModal(); return refresh(); })
-      .then(function () { toast("저장 및 Git 커밋 완료"); })
-      .catch(function (e) { toast(e.message || "저장 실패", true); })
+      .then(function () { toast(isEdit ? "수정 및 Git 커밋 완료" : "저장 및 Git 커밋 완료"); })
+      .catch(function (e) { toast(e.message || (isEdit ? "수정 실패" : "저장 실패"), true); })
       .finally(function () {
         hideBusy();
         saveBtn.disabled = false;
-        saveBtn.textContent = "저장 (Git 커밋)";
+        saveBtn.textContent = defaultBtnText;
       });
   });
 
@@ -473,7 +569,7 @@
   }
 
   // ---- wire up ----
-  $("fab").addEventListener("click", openMemoModal);
+  $("fab").addEventListener("click", function () { openMemoModal(); });
   $("modalClose").addEventListener("click", closeMemoModal);
   $("cancelBtn").addEventListener("click", closeMemoModal);
   $("adminBtn").addEventListener("click", openAdminModal);
