@@ -228,6 +228,31 @@ async function handleUpdate(req, res, id) {
   sendJSON(res, 200, { ok: true, memo: memo });
 }
 
+async function handleChangePassword(req, res) {
+  const raw = await readBody(req);
+  let data;
+  try { data = JSON.parse(raw.toString("utf8")); } catch (e) { return sendJSON(res, 400, { error: "잘못된 JSON" }); }
+  const hash = String(data.hash || "").trim();
+  if (!/^[0-9a-fA-F]{64}$/.test(hash)) return sendJSON(res, 400, { error: "잘못된 해시" });
+
+  const authFile = path.join(DOCS_DIR, "js", "auth.js");
+  let src;
+  try { src = fs.readFileSync(authFile, "utf8"); } catch (e) { return sendJSON(res, 500, { error: "auth.js를 읽을 수 없습니다" }); }
+  if (!/var PASS_HASH = "[0-9a-fA-F]{64}"/.test(src)) return sendJSON(res, 500, { error: "auth.js에서 PASS_HASH를 찾을 수 없습니다" });
+
+  const updated = src
+    .replace(/var PASS_HASH = "[0-9a-fA-F]{64}"/, 'var PASS_HASH = "' + hash + '"')
+    .replace(/\/\/ SHA-256\("[^"]*"\)/, "// SHA-256 of the access password (변경: ⚙ 관리자 설정 → 접근 암호 변경)");
+  fs.writeFileSync(authFile, updated);
+
+  try {
+    await gitCommit("chore: change access password", [path.join("docs", "js", "auth.js")]);
+  } catch (e) {
+    return sendJSON(res, 500, { error: "변경은 되었으나 Git 커밋에 실패했습니다: " + e.message });
+  }
+  sendJSON(res, 200, { ok: true });
+}
+
 async function handleDelete(res, id) {
   if (!/^[\w-]+$/.test(id)) return sendJSON(res, 400, { error: "잘못된 id" });
   const memoFile = path.join(DATA_DIR, "memo-" + id + ".json");
@@ -307,6 +332,9 @@ const server = http.createServer(async (req, res) => {
     }
     if (urlPath.startsWith("/api/memos/") && req.method === "DELETE") {
       return await handleDelete(res, urlPath.slice("/api/memos/".length));
+    }
+    if (urlPath === "/api/password" && req.method === "PUT") {
+      return await handleChangePassword(req, res);
     }
     if (urlPath.startsWith("/api/")) {
       return sendJSON(res, 404, { error: "알 수 없는 API" });

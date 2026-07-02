@@ -156,6 +156,20 @@
           <button type="button" class="btn-secondary" id="adminCheckBtn">연결 확인</button>
           <button type="button" class="btn-primary" id="adminSaveBtn">저장</button>
         </div>
+
+        <hr class="admin-divider" />
+        <div class="field">
+          <span class="field-label">🔑 접근 암호 변경</span>
+          <input type="password" id="pwCurrent" class="pw-input" placeholder="현재 암호" autocomplete="off" />
+          <input type="password" id="pwNew" class="pw-input" placeholder="새 암호 (4자 이상)" autocomplete="new-password" />
+          <input type="password" id="pwNew2" class="pw-input" placeholder="새 암호 확인" autocomplete="new-password" />
+          <span class="field-hint">
+            새 암호의 <b>SHA-256 해시만</b> <code>docs/js/auth.js</code>에 커밋됩니다(평문은 저장하지 않음).
+            <b>쓰기 토큰(또는 서버 연결)</b>이 필요하며, <b>배포 재빌드 후(수 분) 모든 기기</b>에 적용됩니다.
+          </span>
+          <div class="pw-status" id="pwStatus"></div>
+          <button type="button" class="btn-primary pw-change-btn" id="pwChangeBtn">암호 변경 (Git 커밋)</button>
+        </div>
       </div>
     </div>
   </div>
