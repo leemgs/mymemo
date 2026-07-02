@@ -10,8 +10,8 @@
   "use strict";
 
   var UNLOCK_KEY = "mymemo_unlocked";
-  // SHA-256("leemgs75")
-  var PASS_HASH = "75685048a6cbb5b83c924be356248ea11eb0e1c2f48cec9794d3a72e3850806e";
+  // SHA-256("password2848")
+  var PASS_HASH = "ea0f3f1337e2c53314fddb06dc123e75a0b595f27b24a194a0df5ae3f3464c3c";
 
   var screen = document.getElementById("lockScreen");
   var form = document.getElementById("lockForm");
