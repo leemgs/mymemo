@@ -166,6 +166,20 @@ body {
   transition: background 0.15s;
 }
 .btn-admin:hover { background: #e9edf3; }
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #f3f5f9;
+  color: #4b5565;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.github-link:hover { background: #e9edf3; color: #1b1f24; }
 
 /* Status banner */
 .status-banner {
