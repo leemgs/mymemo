@@ -431,6 +431,13 @@ body {
 }
 .existing-attach-item input { margin: 0; }
 
+.admin-divider { border: none; border-top: 1px solid var(--border); margin: 22px 0 16px; }
+.pw-input { margin-bottom: 8px; }
+.pw-status { font-size: 13px; margin: 4px 0 10px; min-height: 16px; }
+.pw-status.ok { color: #1a7f37; }
+.pw-status.err { color: #d33; }
+.pw-change-btn { width: 100%; }
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
