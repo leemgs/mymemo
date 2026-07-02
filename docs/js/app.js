@@ -114,6 +114,20 @@
     var bytes = Uint8Array.from(bin, function (c) { return c.charCodeAt(0); });
     return new TextDecoder().decode(bytes);
   }
+  function sha256Hex(str) {
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(str)).then(function (buf) {
+      return Array.prototype.map.call(new Uint8Array(buf), function (b) {
+        return ("0" + b.toString(16)).slice(-2);
+      }).join("");
+    });
+  }
+  // Rewrite the PASS_HASH line (and drop any plaintext comment) in auth.js source.
+  var PASS_HASH_RE = /var PASS_HASH = "[0-9a-fA-F]{64}"/;
+  function applyNewPassHash(src, newHash) {
+    return src
+      .replace(PASS_HASH_RE, 'var PASS_HASH = "' + newHash + '"')
+      .replace(/\/\/ SHA-256\("[^"]*"\)/, "// SHA-256 of the access password (변경: ⚙ 관리자 설정 → 접근 암호 변경)");
+  }
 
   // ---- GitHub API ----
   var GH = "https://api.github.com";
@@ -257,6 +271,18 @@
       return commitFiles('memo: edit "' + title + '" (' + id + ")", changes).then(function () { return memo; });
     });
   }
+  // Commit a new access-password hash into docs/js/auth.js (global, all devices).
+  function githubChangePassword(newHash) {
+    return ghApi("GET", "/contents/docs/js/auth.js?ref=" + encodeURIComponent(cfg.branch))
+      .then(function (res) {
+        var src = b64decode(res.content);
+        if (!PASS_HASH_RE.test(src)) throw new Error("auth.js에서 PASS_HASH를 찾을 수 없습니다");
+        var updated = applyNewPassHash(src, newHash);
+        return commitFiles("chore: change access password", [
+          { path: "docs/js/auth.js", contentBase64: b64encode(updated) }
+        ]);
+      });
+  }
 
   // ---- local server (optional self-host) ----
   function sbase() { return (cfg.apiBase || "").replace(/\/+$/, ""); }
@@ -277,6 +303,10 @@
     return fetch(sbase() + "/api/memos/" + encodeURIComponent(id), { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
       .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "수정 실패"); return j.memo; }); });
   }
+  function serverChangePassword(newHash) {
+    return fetch(sbase() + "/api/password", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ hash: newHash }) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "암호 변경 실패"); }); });
+  }
 
   // ---- store abstraction ----
   var store = {
@@ -289,7 +319,8 @@
     list: function () { return cfg.mode === "server" ? serverList() : githubList(); },
     create: function (p) { return cfg.mode === "server" ? serverCreate(p) : githubCreate(p); },
     update: function (id, p) { return cfg.mode === "server" ? serverUpdate(id, p) : githubUpdate(id, p); },
-    remove: function (id) { return cfg.mode === "server" ? serverRemove(id) : githubRemove(id); }
+    remove: function (id) { return cfg.mode === "server" ? serverRemove(id) : githubRemove(id); },
+    changePassword: function (h) { return cfg.mode === "server" ? serverChangePassword(h) : githubChangePassword(h); }
   };
 
   // ---- rendering ----
@@ -568,6 +599,41 @@
     }
   }
 
+  // ---- change access password (commit new hash to auth.js) ----
+  function changePassword() {
+    var st = $("pwStatus"), btn = $("pwChangeBtn");
+    st.className = "pw-status"; st.textContent = "";
+    if (!store.canWrite()) {
+      st.className = "pw-status err";
+      st.textContent = cfg.mode === "server" ? "먼저 서버에 연결하세요." : "먼저 쓰기 토큰을 저장하세요.";
+      return;
+    }
+    var cur = $("pwCurrent").value, np = $("pwNew").value, np2 = $("pwNew2").value;
+    if (np.length < 4) { st.className = "pw-status err"; st.textContent = "새 암호는 4자 이상이어야 합니다."; return; }
+    if (np !== np2) { st.className = "pw-status err"; st.textContent = "새 암호 확인이 일치하지 않습니다."; return; }
+
+    var curHash = window.MYMEMO_PASS_HASH;
+    sha256Hex(cur).then(function (h) {
+      if (curHash && h !== curHash) { var e = new Error("현재 암호가 올바르지 않습니다."); e.handled = true; throw e; }
+      return sha256Hex(np);
+    }).then(function (newHash) {
+      btn.disabled = true;
+      showBusy("접근 암호를 변경하고 Git에 커밋하는 중…");
+      return store.changePassword(newHash).then(function () {
+        $("pwCurrent").value = $("pwNew").value = $("pwNew2").value = "";
+        st.className = "pw-status ok";
+        st.textContent = "✓ 변경 완료. 배포 재빌드 후(수 분) 모든 기기에 적용됩니다.";
+        toast("접근 암호 변경 및 Git 커밋 완료");
+      });
+    }).catch(function (e) {
+      st.className = "pw-status err";
+      st.textContent = (e && e.message) || "암호 변경 실패";
+      if (!(e && e.handled)) toast((e && e.message) || "암호 변경 실패", true);
+    }).finally(function () {
+      hideBusy(); btn.disabled = false;
+    });
+  }
+
   // ---- wire up ----
   $("fab").addEventListener("click", function () { openMemoModal(); });
   $("modalClose").addEventListener("click", closeMemoModal);
@@ -576,6 +642,7 @@
   $("adminClose").addEventListener("click", closeAdminModal);
   $("cfgMode").addEventListener("change", function () { cfg.mode = $("cfgMode").value; syncModeFields(); });
   $("adminCheckBtn").addEventListener("click", checkConnection);
+  $("pwChangeBtn").addEventListener("click", changePassword);
   $("adminSaveBtn").addEventListener("click", function () {
     cfg = Object.assign({}, cfg, readAdminForm());
     // Keep using the injected Secret token when the admin didn't type a personal one.
