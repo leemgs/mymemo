@@ -1,13 +1,14 @@
 name: Deploy My Memo to GitHub Pages
 
-# repo Secret(MYMEMO_WRITE_TOKEN)을 docs/config.js 에 주입한 뒤 Pages 로 배포합니다.
-# 토큰은 배포 결과물에만 포함되며 저장소에는 커밋되지 않습니다.
+# docs/ 를 GitHub Pages(Actions)로 배포합니다.
+#
+# ⚠ 토큰은 배포물에 넣지 않습니다 — 공개된 config.js 에 쓰기 토큰이 있으면
+#   GitHub 보안 스캐닝이 그 토큰을 자동으로 폐기(revoke)하기 때문입니다.
+#   쓰기(저장/수정/삭제)는 관리자가 ⚙ 관리자 설정에서 본인 PAT 를 입력하면
+#   그 브라우저(localStorage)에서만 동작합니다. 공개된 사이트 자체는 읽기 전용입니다.
 #
 # 사전 준비:
-#  1) Settings → Secrets and variables → Actions → New repository secret
-#     - Name : MYMEMO_WRITE_TOKEN
-#     - Value: fine-grained PAT (이 저장소의 Contents: Read and write 권한만)
-#  2) Settings → Pages → Build and deployment → Source: "GitHub Actions"
+#  1) Settings → Pages → Build and deployment → Source: "GitHub Actions"
 
 on:
   push:
@@ -33,27 +34,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject runtime config (token from repo Secret)
+      - name: Inject runtime config (owner/repo/branch only — no token)
         env:
-          TOKEN: ${{ secrets.MYMEMO_WRITE_TOKEN }}
           OWNER: ${{ github.repository_owner }}
           REPO_FULL: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
         run: |
           REPO="${REPO_FULL#*/}"
-          if [ -z "$TOKEN" ]; then
-            echo "::warning::MYMEMO_WRITE_TOKEN 시크릿이 비어 있습니다. 배포는 되지만 저장(쓰기) 기능은 비활성화됩니다."
-          fi
+          # 토큰은 의도적으로 넣지 않습니다. 공개 config.js 에 실린 토큰은 GitHub
+          # 보안 스캐닝에 자동 폐기되므로, 쓰기는 관리자가 브라우저 ⚙ 관리자 설정에
+          # 직접 입력한 PAT(해당 브라우저 localStorage 에만 저장)로만 동작합니다.
           cat > docs/config.js <<EOF
-          /* 배포 시 자동 생성됨 (.github/workflows/deploy.yml). 저장소에 커밋되지 않습니다. */
+          /* 배포 시 자동 생성됨 (.github/workflows/deploy.yml). 저장소에 커밋되지 않습니다.
+             token 은 의도적으로 비워 둡니다 — 쓰기 토큰은 ⚙ 관리자 설정(브라우저)에만 저장하세요. */
           window.MYMEMO_CONFIG = {
             owner: "${OWNER}",
             repo: "${REPO}",
             branch: "${BRANCH}",
-            token: "${TOKEN}"
+            token: ""
           };
           EOF
-          echo "config.js 생성 완료 (owner=${OWNER}, repo=${REPO}, branch=${BRANCH}, token=${TOKEN:+설정됨})"
+          echo "config.js 생성 완료 (owner=${OWNER}, repo=${REPO}, branch=${BRANCH}, token=없음 → 브라우저에서 입력)"
 
       - name: Ensure Pages source = GitHub Actions (best-effort)
         env:
