@@ -397,6 +397,26 @@ body {
 .field textarea { resize: vertical; }
 .field-hint { display: block; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
 
+.existing-attach {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.existing-attach-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #2b3442;
+  background: #f6f8fb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 11px;
+  cursor: pointer;
+}
+.existing-attach-item input { margin: 0; }
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
