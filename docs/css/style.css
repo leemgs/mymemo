@@ -356,6 +356,8 @@ body {
   overflow-y: auto;
   box-shadow: var(--shadow-lg);
 }
+/* 관리자 설정 모달은 필드(Owner/Repo/Branch 등)가 많아 더 넓게 표시한다. */
+#adminModal .modal { max-width: 720px; }
 .modal-header {
   display: flex;
   align-items: center;
