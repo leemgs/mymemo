@@ -137,7 +137,7 @@
     return h;
   }
   function ghApi(method, path, body) {
-    var opt = { method: method, headers: ghHeaders() };
+    var opt = { method: method, headers: ghHeaders(), cache: "no-store" };
     if (body) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
     return fetch(GH + "/repos/" + cfg.owner + "/" + cfg.repo + path, opt).then(function (r) {
       if (r.status === 204) return null;
@@ -192,7 +192,8 @@
     });
   }
   function githubList() {
-    return ghApi("GET", "/contents/" + cfg.dataDir + "/index.json?ref=" + encodeURIComponent(cfg.branch))
+    // cache-buster(_=…) + no-store 로 브라우저/프록시 캐시된 옛 index.json 을 피합니다.
+    return ghApi("GET", "/contents/" + cfg.dataDir + "/index.json?ref=" + encodeURIComponent(cfg.branch) + "&_=" + new Date().getTime())
       .then(function (res) { tokenInvalid = false; return (JSON.parse(b64decode(res.content)).memos) || []; })
       .catch(function (e) {
         if (e.status === 404) return [];
@@ -453,7 +454,12 @@
     if (!confirm("이 메모를 삭제할까요? (Git에서도 삭제 커밋됩니다)")) return;
     showBusy("메모를 삭제하고 Git에 커밋하는 중…");
     store.remove(id)
-      .then(function () { toast("삭제 및 Git 커밋 완료"); return refresh(); })
+      .then(function () {
+        // 낙관적 업데이트: 삭제된 메모를 즉시 화면에서 제거 (재읽기 불필요).
+        currentMemos = currentMemos.filter(function (m) { return m.id !== id; });
+        render(currentMemos);
+        toast("삭제 및 Git 커밋 완료");
+      })
       .catch(function (e) { toast(e.message || "삭제 실패", true); })
       .finally(function () { hideBusy(); });
   }
@@ -533,8 +539,21 @@
         if (isEdit) { payload.keep = keep; return store.update(idForEdit, payload); }
         return store.create(payload);
       })
-      .then(function () { closeMemoModal(); return refresh(); })
-      .then(function () { toast(isEdit ? "수정 및 Git 커밋 완료" : "저장 및 Git 커밋 완료"); })
+      .then(function (savedMemo) {
+        closeMemoModal();
+        // 커밋에 성공해 돌려받은 메모로 화면을 즉시 갱신(낙관적 업데이트).
+        // 여기서 GitHub 를 다시 읽지 않으므로, 캐시된/반영 전 목록이 새 메모를
+        // 덮어써 사라지는 문제(하드리프레시 필요)가 발생하지 않습니다.
+        if (savedMemo && savedMemo.id) {
+          if (isEdit) {
+            currentMemos = currentMemos.map(function (m) { return m.id === savedMemo.id ? savedMemo : m; });
+          } else {
+            currentMemos = [savedMemo].concat(currentMemos);
+          }
+          render(currentMemos);
+        }
+        toast(isEdit ? "수정 및 Git 커밋 완료" : "저장 및 Git 커밋 완료");
+      })
       .catch(function (e) { toast(e.message || (isEdit ? "수정 실패" : "저장 실패"), true); })
       .finally(function () {
         hideBusy();
