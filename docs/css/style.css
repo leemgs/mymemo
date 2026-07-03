@@ -473,6 +473,50 @@ body {
 .anon-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #2b3442; cursor: pointer; margin: 4px 0 2px; }
 .anon-row input { margin: 0; }
 
+/* 색상 선택 스와치 */
+.color-picker { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 2px; }
+.swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.swatch:hover { transform: scale(1.1); }
+.swatch.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--accent);
+}
+.swatch.selected::after {
+  content: "✓";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: #33404f;
+  font-weight: 700;
+}
+/* 자동: 무지개 그라디언트 + A 표시 */
+.swatch-auto {
+  background: conic-gradient(#fff59d, #ffcfda, #c6e6ff, #cdf0c4, #ffe0b0, #e3d6ff, #c7f2e9, #fff59d);
+}
+.swatch-auto::before {
+  content: "A";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #33404f;
+}
+
 .load-more-wrap { text-align: center; margin: 24px 0 8px; }
 .load-more-info { color: var(--text-muted); font-size: 13px; margin-top: 10px; }
 #scrollSentinel { height: 1px; width: 100%; }

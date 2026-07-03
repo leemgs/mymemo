@@ -214,7 +214,8 @@
         attachments.push({ name: f.name, size: f.size, stored: stored });
       });
       var memo = { id: id, title: payload.title || "", content: payload.content,
-                   tags: payload.tags || [], attachments: attachments, createdAt: new Date().toISOString() };
+                   tags: payload.tags || [], color: payload.color || "",
+                   attachments: attachments, createdAt: new Date().toISOString() };
       changes.push({ path: cfg.dataDir + "/memo-" + id + ".json", contentBase64: b64encode(JSON.stringify(memo, null, 2)) });
       var newMemos = [memo].concat(memos);
       changes.push({ path: cfg.dataDir + "/index.json", contentBase64: b64encode(JSON.stringify({ memos: newMemos }, null, 2)) });
@@ -260,6 +261,7 @@
         title: payload.title || "",
         content: payload.content,
         tags: payload.tags || [],
+        color: payload.color || "",
         attachments: attachments,
         createdAt: existing.createdAt,
         updatedAt: new Date().toISOString()
@@ -417,19 +419,39 @@
     ensureObserver();
     fillViewport();
   }
-  // 포스트잇 색상/기울기: 메모 id 해시로 결정해 재렌더 시에도 일정하게 유지한다.
-  var STICKY_COUNT = 7;
+  // 포스트잇 색상/기울기.
+  // 색: 메모에 color(팔레트 key)가 있으면 그 색, 없으면 id 해시로 자동 배정.
+  // 기울기: 항상 id 해시로 결정해 재렌더 시에도 일정하게 유지한다.
+  var STICKY_PALETTE = [
+    { key: "yellow", hex: "#fff59d", label: "노랑" },
+    { key: "pink",   hex: "#ffcfda", label: "핑크" },
+    { key: "blue",   hex: "#c6e6ff", label: "블루" },
+    { key: "green",  hex: "#cdf0c4", label: "그린" },
+    { key: "orange", hex: "#ffe0b0", label: "오렌지" },
+    { key: "purple", hex: "#e3d6ff", label: "퍼플" },
+    { key: "mint",   hex: "#c7f2e9", label: "민트" }
+  ];
   var STICKY_ROT = [-1.5, 1.1, -0.7, 1.4, -1.1, 0.6, -0.4];
   function stickyIndex(id) {
     var s = String(id || ""), h = 0;
     for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-    return h % STICKY_COUNT;
+    return h % STICKY_PALETTE.length;
+  }
+  function colorKeyToIndex(key) {
+    for (var i = 0; i < STICKY_PALETTE.length; i++) if (STICKY_PALETTE[i].key === key) return i;
+    return -1;
   }
   function card(m) {
     var el = document.createElement("article");
-    var pal = stickyIndex(m.id);
-    el.className = "memo-card sticky-" + pal;
-    el.style.setProperty("--rot", STICKY_ROT[pal] + "deg");
+    var hashIdx = stickyIndex(m.id);
+    el.style.setProperty("--rot", STICKY_ROT[hashIdx] + "deg");
+    var colorIdx = colorKeyToIndex(m.color);
+    if (colorIdx >= 0) {
+      el.className = "memo-card";
+      el.style.setProperty("--paper", STICKY_PALETTE[colorIdx].hex);
+    } else {
+      el.className = "memo-card sticky-" + hashIdx; // 자동(색 미지정)
+    }
     var html = "";
     if (m.title) html += '<h3 class="memo-title">' + esc(m.title) + "</h3>";
     html += '<div class="memo-content">' + esc(m.content) + "</div>";
@@ -564,6 +586,32 @@
   // ---- new / edit memo modal ----
   var memoModal = $("memoModal"), memoForm = $("memoForm");
   var editingId = null;
+  var selectedColor = ""; // "" = 자동(id 해시 색)
+
+  // 색상 선택 스와치 구성 (자동 + 팔레트 7색). 한 번만 생성.
+  function buildColorPicker() {
+    var wrap = $("memoColorPicker");
+    if (!wrap || wrap.childNodes.length) return;
+    var opts = [{ key: "", hex: "", label: "자동" }].concat(STICKY_PALETTE);
+    opts.forEach(function (o) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "swatch" + (o.key === "" ? " swatch-auto" : "");
+      b.setAttribute("data-color", o.key);
+      b.title = o.label;
+      b.setAttribute("aria-label", o.label);
+      if (o.hex) b.style.background = o.hex;
+      b.addEventListener("click", function () { setSelectedColor(o.key); });
+      wrap.appendChild(b);
+    });
+  }
+  function setSelectedColor(key) {
+    selectedColor = key || "";
+    var wrap = $("memoColorPicker");
+    Array.prototype.forEach.call(wrap.querySelectorAll(".swatch"), function (s) {
+      s.classList.toggle("selected", s.getAttribute("data-color") === selectedColor);
+    });
+  }
 
   function renderExistingAttachments(memo) {
     var field = $("existingAttachField");
@@ -588,6 +636,7 @@
       return;
     }
     memoForm.reset();
+    buildColorPicker();
     if (memo && memo.id) {
       editingId = memo.id;
       $("memoModalTitle").textContent = "메모 수정";
@@ -596,12 +645,14 @@
       $("memoTags").value = (memo.tags || []).join(", ");
       $("fileFieldLabel").textContent = "첨부파일 추가";
       $("saveBtn").textContent = "수정 저장 (Git 커밋)";
+      setSelectedColor(memo.color || "");
       renderExistingAttachments(memo);
     } else {
       editingId = null;
       $("memoModalTitle").textContent = "새 메모 작성";
       $("fileFieldLabel").textContent = "파일 첨부";
       $("saveBtn").textContent = "저장 (Git 커밋)";
+      setSelectedColor("");
       $("existingAttachField").hidden = true;
       $("existingAttachList").innerHTML = "";
     }
@@ -632,7 +683,7 @@
       return readFileAsDataURL(f).then(function (u) { return { name: f.name, size: f.size, dataUrl: u }; });
     }))
       .then(function (fs) {
-        var payload = { title: $("memoTitle").value.trim(), content: content, tags: tags, files: fs };
+        var payload = { title: $("memoTitle").value.trim(), content: content, tags: tags, color: selectedColor, files: fs };
         if (isEdit) { payload.keep = keep; return store.update(idForEdit, payload); }
         return store.create(payload);
       })

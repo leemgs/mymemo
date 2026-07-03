@@ -77,8 +77,8 @@ function readMemos() {
 
 function writeIndex(memos) {
   const manifest = memos.map(m => ({
-    id: m.id, title: m.title, content: m.content, tags: m.tags,
-    attachments: m.attachments, createdAt: m.createdAt
+    id: m.id, title: m.title, content: m.content, tags: m.tags, color: m.color,
+    attachments: m.attachments, createdAt: m.createdAt, updatedAt: m.updatedAt
   }));
   fs.writeFileSync(INDEX_FILE, JSON.stringify({ memos: manifest }, null, 2));
 }
@@ -151,6 +151,7 @@ async function handleCreate(req, res) {
     title: (data.title || "").trim(),
     content: content,
     tags: Array.isArray(data.tags) ? data.tags.filter(Boolean) : [],
+    color: (data.color || "").trim(),
     attachments: attachments,
     createdAt: now.toISOString()
   };
@@ -212,6 +213,7 @@ async function handleUpdate(req, res, id) {
     title: (data.title || "").trim(),
     content: content,
     tags: Array.isArray(data.tags) ? data.tags.filter(Boolean) : [],
+    color: (data.color || "").trim(),
     attachments: attachments,
     createdAt: existing.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
