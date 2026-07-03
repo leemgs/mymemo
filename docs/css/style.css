@@ -442,6 +442,10 @@ body {
 .anon-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #2b3442; cursor: pointer; margin: 4px 0 2px; }
 .anon-row input { margin: 0; }
 
+.load-more-wrap { text-align: center; margin: 24px 0 8px; }
+.load-more-info { color: var(--text-muted); font-size: 13px; margin-top: 10px; }
+#scrollSentinel { height: 1px; width: 100%; }
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
