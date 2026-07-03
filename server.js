@@ -253,6 +253,28 @@ async function handleChangePassword(req, res) {
   sendJSON(res, 200, { ok: true });
 }
 
+async function handleSetAnon(req, res) {
+  const raw = await readBody(req);
+  let data;
+  try { data = JSON.parse(raw.toString("utf8")); } catch (e) { return sendJSON(res, 400, { error: "잘못된 JSON" }); }
+  const allow = data.allow === true;
+
+  const authFile = path.join(DOCS_DIR, "js", "auth.js");
+  let src;
+  try { src = fs.readFileSync(authFile, "utf8"); } catch (e) { return sendJSON(res, 500, { error: "auth.js를 읽을 수 없습니다" }); }
+  if (!/var ALLOW_ANON = (?:true|false);/.test(src)) return sendJSON(res, 500, { error: "auth.js에서 ALLOW_ANON을 찾을 수 없습니다" });
+
+  const updated = src.replace(/var ALLOW_ANON = (?:true|false);/, "var ALLOW_ANON = " + (allow ? "true" : "false") + ";");
+  fs.writeFileSync(authFile, updated);
+
+  try {
+    await gitCommit("chore: " + (allow ? "enable" : "disable") + " anonymous access", [path.join("docs", "js", "auth.js")]);
+  } catch (e) {
+    return sendJSON(res, 500, { error: "변경은 되었으나 Git 커밋에 실패했습니다: " + e.message });
+  }
+  sendJSON(res, 200, { ok: true });
+}
+
 async function handleDelete(res, id) {
   if (!/^[\w-]+$/.test(id)) return sendJSON(res, 400, { error: "잘못된 id" });
   const memoFile = path.join(DATA_DIR, "memo-" + id + ".json");
@@ -335,6 +357,9 @@ const server = http.createServer(async (req, res) => {
     }
     if (urlPath === "/api/password" && req.method === "PUT") {
       return await handleChangePassword(req, res);
+    }
+    if (urlPath === "/api/anon" && req.method === "PUT") {
+      return await handleSetAnon(req, res);
     }
     if (urlPath.startsWith("/api/")) {
       return sendJSON(res, 404, { error: "알 수 없는 API" });

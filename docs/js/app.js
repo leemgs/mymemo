@@ -274,12 +274,25 @@
   }
   // Commit a new access-password hash into docs/js/auth.js (global, all devices).
   function githubChangePassword(newHash) {
-    return ghApi("GET", "/contents/docs/js/auth.js?ref=" + encodeURIComponent(cfg.branch))
+    return ghApi("GET", "/contents/docs/js/auth.js?ref=" + encodeURIComponent(cfg.branch) + "&_=" + new Date().getTime())
       .then(function (res) {
         var src = b64decode(res.content);
         if (!PASS_HASH_RE.test(src)) throw new Error("auth.js에서 PASS_HASH를 찾을 수 없습니다");
         var updated = applyNewPassHash(src, newHash);
         return commitFiles("chore: change access password", [
+          { path: "docs/js/auth.js", contentBase64: b64encode(updated) }
+        ]);
+      });
+  }
+  // Toggle anonymous access by committing the ALLOW_ANON flag in docs/js/auth.js.
+  var ALLOW_ANON_RE = /var ALLOW_ANON = (?:true|false);/;
+  function githubSetAllowAnon(allow) {
+    return ghApi("GET", "/contents/docs/js/auth.js?ref=" + encodeURIComponent(cfg.branch) + "&_=" + new Date().getTime())
+      .then(function (res) {
+        var src = b64decode(res.content);
+        if (!ALLOW_ANON_RE.test(src)) throw new Error("auth.js에서 ALLOW_ANON을 찾을 수 없습니다");
+        var updated = src.replace(ALLOW_ANON_RE, "var ALLOW_ANON = " + (allow ? "true" : "false") + ";");
+        return commitFiles("chore: " + (allow ? "enable" : "disable") + " anonymous access", [
           { path: "docs/js/auth.js", contentBase64: b64encode(updated) }
         ]);
       });
@@ -308,6 +321,10 @@
     return fetch(sbase() + "/api/password", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ hash: newHash }) })
       .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "암호 변경 실패"); }); });
   }
+  function serverSetAllowAnon(allow) {
+    return fetch(sbase() + "/api/anon", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ allow: !!allow }) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "변경 실패"); }); });
+  }
 
   // ---- store abstraction ----
   var store = {
@@ -321,7 +338,8 @@
     create: function (p) { return cfg.mode === "server" ? serverCreate(p) : githubCreate(p); },
     update: function (id, p) { return cfg.mode === "server" ? serverUpdate(id, p) : githubUpdate(id, p); },
     remove: function (id) { return cfg.mode === "server" ? serverRemove(id) : githubRemove(id); },
-    changePassword: function (h) { return cfg.mode === "server" ? serverChangePassword(h) : githubChangePassword(h); }
+    changePassword: function (h) { return cfg.mode === "server" ? serverChangePassword(h) : githubChangePassword(h); },
+    setAllowAnon: function (a) { return cfg.mode === "server" ? serverSetAllowAnon(a) : githubSetAllowAnon(a); }
   };
 
   // ---- rendering ----
@@ -582,6 +600,10 @@
     $("tokenInputBox").hidden = injected;
     $("cfgToken").value = injected ? "" : (cfg.token || "");
     $("adminStatus").textContent = ""; $("adminStatus").className = "admin-status";
+    // Reflect the current anonymous-access flag (from auth.js).
+    $("anonToggle").checked = !!window.MYMEMO_ALLOW_ANON;
+    $("anonStatus").textContent = ""; $("anonStatus").className = "pw-status";
+    $("pwStatus").textContent = ""; $("pwStatus").className = "pw-status";
     adminModal.hidden = false;
   }
   function closeAdminModal() { adminModal.hidden = true; }
@@ -653,6 +675,30 @@
     });
   }
 
+  // ---- anonymous access toggle (commit ALLOW_ANON flag to auth.js) ----
+  function applyAnonSetting() {
+    var st = $("anonStatus"), btn = $("anonApplyBtn"), allow = $("anonToggle").checked;
+    st.className = "pw-status"; st.textContent = "";
+    if (!store.canWrite()) {
+      st.className = "pw-status err";
+      st.textContent = cfg.mode === "server" ? "먼저 서버에 연결하세요." : "먼저 쓰기 토큰을 저장하세요.";
+      return;
+    }
+    btn.disabled = true;
+    showBusy("익명 접근 설정을 변경하고 Git에 커밋하는 중…");
+    store.setAllowAnon(allow).then(function () {
+      st.className = "pw-status ok";
+      st.textContent = "✓ " + (allow ? "익명 접근 허용" : "익명 접근 차단") + " — 배포 재빌드 후(수 분) 모든 방문자에게 적용됩니다.";
+      toast("익명 접근 설정 변경 및 Git 커밋 완료");
+    }).catch(function (e) {
+      st.className = "pw-status err";
+      st.textContent = (e && e.message) || "변경 실패";
+      toast((e && e.message) || "변경 실패", true);
+    }).finally(function () {
+      hideBusy(); btn.disabled = false;
+    });
+  }
+
   // ---- wire up ----
   $("fab").addEventListener("click", function () { openMemoModal(); });
   $("modalClose").addEventListener("click", closeMemoModal);
@@ -662,6 +708,7 @@
   $("cfgMode").addEventListener("change", function () { cfg.mode = $("cfgMode").value; syncModeFields(); });
   $("adminCheckBtn").addEventListener("click", checkConnection);
   $("pwChangeBtn").addEventListener("click", changePassword);
+  $("anonApplyBtn").addEventListener("click", applyAnonSetting);
   $("adminSaveBtn").addEventListener("click", function () {
     cfg = Object.assign({}, cfg, readAdminForm());
     // Keep using the injected Secret token when the admin didn't type a personal one.
