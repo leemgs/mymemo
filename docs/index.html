@@ -159,6 +159,22 @@
 
         <hr class="admin-divider" />
         <div class="field">
+          <span class="field-label">👀 익명 접근</span>
+          <label class="anon-row">
+            <input type="checkbox" id="anonToggle" />
+            <span>익명 접근 (로그인 접근 암호 불필요) 허용</span>
+          </label>
+          <span class="field-hint">
+            켜면 <b>잠금화면 없이 누구나</b> 열람할 수 있습니다(저장·수정·삭제는 여전히 토큰이 필요).
+            설정은 <code>docs/js/auth.js</code>에 커밋되며, <b>쓰기 토큰(또는 서버 연결)</b>이 필요하고
+            <b>배포 재빌드 후(수 분) 모든 방문자</b>에게 적용됩니다.
+          </span>
+          <div class="pw-status" id="anonStatus"></div>
+          <button type="button" class="btn-primary pw-change-btn" id="anonApplyBtn">적용 (Git 커밋)</button>
+        </div>
+
+        <hr class="admin-divider" />
+        <div class="field">
           <span class="field-label">🔑 접근 암호 변경</span>
           <input type="password" id="pwCurrent" class="pw-input" placeholder="현재 암호" autocomplete="off" />
           <input type="password" id="pwNew" class="pw-input" placeholder="새 암호 (4자 이상)" autocomplete="new-password" />

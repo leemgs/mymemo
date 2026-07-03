@@ -16,6 +16,11 @@
   // verify the current password before committing a new one.
   window.MYMEMO_PASS_HASH = PASS_HASH;
 
+  // 익명 접근: true 이면 잠금화면 없이 누구나 열람할 수 있습니다.
+  // (⚙ 관리자 설정 → "익명 접근 허용" 에서 토글되어 이 파일에 커밋됩니다.)
+  var ALLOW_ANON = false;
+  window.MYMEMO_ALLOW_ANON = ALLOW_ANON;
+
   var screen = document.getElementById("lockScreen");
   var form = document.getElementById("lockForm");
   var input = document.getElementById("lockInput");
@@ -33,8 +38,8 @@
     signalUnlocked();
   }
 
-  // Already unlocked this session?
-  if (sessionStorage.getItem(UNLOCK_KEY) === "1") {
+  // Anonymous access enabled by admin, or already unlocked this session → skip the gate.
+  if (ALLOW_ANON || sessionStorage.getItem(UNLOCK_KEY) === "1") {
     screen.style.display = "none";
     document.body.classList.remove("locked");
     // Set flag synchronously so app.js (loaded next) starts loading immediately.
