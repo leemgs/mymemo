@@ -129,6 +129,33 @@
       .replace(/\/\/ SHA-256\("[^"]*"\)/, "// SHA-256 of the access password (변경: ⚙ 관리자 설정 → 접근 암호 변경)");
   }
 
+  // ---- slim index (B: 목록엔 요약만, 본문은 지연 로딩) ----
+  var SNIPPET_LEN = 180;
+  // 전체 메모 → index.json 용 경량 항목(본문 대신 snippet + more 플래그).
+  function toIndexEntry(m) {
+    var c = String(m.content || "");
+    var more = c.length > SNIPPET_LEN;
+    return {
+      id: m.id, title: m.title || "",
+      snippet: more ? c.slice(0, SNIPPET_LEN) : c, more: more,
+      tags: m.tags || [], color: m.color || "",
+      attachments: m.attachments || [],
+      createdAt: m.createdAt, updatedAt: m.updatedAt
+    };
+  }
+  // 목록 항목 m 의 전체 본문을 보장한다(필요 시 memo-<id>.json 을 지연 로딩해 m 갱신).
+  function ensureFull(m) {
+    if (m.content != null && !m.more) return Promise.resolve(m);
+    return store.getFull(m.id).then(function (full) {
+      m.content = full.content || "";
+      m.more = false;
+      if (full.attachments) m.attachments = full.attachments;
+      if (full.tags) m.tags = full.tags;
+      if (full.color != null) m.color = full.color;
+      return m;
+    });
+  }
+
   // ---- GitHub API ----
   var GH = "https://api.github.com";
   function ghHeaders() {
@@ -217,7 +244,7 @@
                    tags: payload.tags || [], color: payload.color || "",
                    attachments: attachments, createdAt: new Date().toISOString() };
       changes.push({ path: cfg.dataDir + "/memo-" + id + ".json", contentBase64: b64encode(JSON.stringify(memo, null, 2)) });
-      var newMemos = [memo].concat(memos);
+      var newMemos = [toIndexEntry(memo)].concat(memos);
       changes.push({ path: cfg.dataDir + "/index.json", contentBase64: b64encode(JSON.stringify({ memos: newMemos }, null, 2)) });
       var title = memo.title || memo.content.slice(0, 30).replace(/\s+/g, " ");
       return commitFiles('memo: add "' + title + '" (' + id + ")", changes).then(function () { return memo; });
@@ -268,11 +295,23 @@
       };
       changes.push({ path: cfg.dataDir + "/memo-" + id + ".json", contentBase64: b64encode(JSON.stringify(memo, null, 2)) });
       var newMemos = memos.slice();
-      newMemos[idx] = memo;
+      newMemos[idx] = toIndexEntry(memo);
       changes.push({ path: cfg.dataDir + "/index.json", contentBase64: b64encode(JSON.stringify({ memos: newMemos }, null, 2)) });
       var title = memo.title || memo.content.slice(0, 30).replace(/\s+/g, " ");
       return commitFiles('memo: edit "' + title + '" (' + id + ")", changes).then(function () { return memo; });
     });
+  }
+  // 개별 메모 전체 본문 로드(지연). contents API 우선, 실패 시 raw CDN 폴백.
+  function githubGetFull(id) {
+    return ghApi("GET", "/contents/" + cfg.dataDir + "/memo-" + encodeURIComponent(id) + ".json?ref=" + encodeURIComponent(cfg.branch) + "&_=" + new Date().getTime())
+      .then(function (res) { return JSON.parse(b64decode(res.content)); })
+      .catch(function (e) {
+        var url = "https://raw.githubusercontent.com/" + cfg.owner + "/" + cfg.repo + "/" +
+          cfg.branch + "/" + cfg.dataDir + "/memo-" + id + ".json?t=" + new Date().getTime();
+        return fetch(url, { cache: "no-store" }).then(function (r) {
+          if (!r.ok) throw new Error("본문을 불러오지 못했습니다"); return r.json();
+        });
+      });
   }
   // Commit a new access-password hash into docs/js/auth.js (global, all devices).
   function githubChangePassword(newHash) {
@@ -307,6 +346,10 @@
       if (!r.ok) throw new Error("server"); serverUp = true; return r.json().then(function (j) { return j.memos || []; });
     });
   }
+  function serverGetFull(id) {
+    return fetch(sbase() + "/data/memo-" + encodeURIComponent(id) + ".json?t=" + new Date().getTime(), { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("본문을 불러오지 못했습니다"); return r.json(); });
+  }
   function serverCreate(payload) {
     return fetch(sbase() + "/api/memos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
       .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "저장 실패"); return j.memo; }); });
@@ -337,6 +380,7 @@
         cfg.branch + "/" + cfg.dataDir + "/attachments/" + stored;
     },
     list: function () { return cfg.mode === "server" ? serverList() : githubList(); },
+    getFull: function (id) { return cfg.mode === "server" ? serverGetFull(id) : githubGetFull(id); },
     create: function (p) { return cfg.mode === "server" ? serverCreate(p) : githubCreate(p); },
     update: function (id, p) { return cfg.mode === "server" ? serverUpdate(id, p) : githubUpdate(id, p); },
     remove: function (id) { return cfg.mode === "server" ? serverRemove(id) : githubRemove(id); },
@@ -454,7 +498,9 @@
     }
     var html = "";
     if (m.title) html += '<h3 class="memo-title">' + esc(m.title) + "</h3>";
-    html += '<div class="memo-content">' + esc(m.content) + "</div>";
+    var body = (m.content != null) ? m.content : (m.snippet || "");
+    html += '<div class="memo-content">' + esc(body) +
+      (m.more ? '… <button class="more-btn" data-act="more">더 읽기</button>' : "") + "</div>";
     if (m.tags && m.tags.length) {
       html += '<div class="memo-tags">' + m.tags.map(function (t) {
         return '<span class="tag">#' + esc(t) + "</span>"; }).join("") + "</div>";
@@ -474,16 +520,29 @@
         '<button class="icon-btn" data-act="del">삭제</button>') + "</span></div>";
     el.innerHTML = html;
 
+    var moreBtn = el.querySelector('[data-act="more"]');
+    if (moreBtn) moreBtn.addEventListener("click", function () {
+      moreBtn.disabled = true; moreBtn.textContent = "불러오는 중…";
+      ensureFull(m).then(function () { el.replaceWith(card(m)); })
+        .catch(function (e) {
+          moreBtn.disabled = false; moreBtn.textContent = "더 읽기";
+          toast(e.message || "본문을 불러오지 못했습니다", true);
+        });
+    });
     el.querySelector('[data-act="copy"]').addEventListener("click", function () {
-      var text = (m.title ? m.title + "\n\n" : "") + m.content;
-      navigator.clipboard.writeText(text).then(
-        function () { toast("메모를 복사했습니다"); },
+      ensureFull(m).then(function () {
+        var text = (m.title ? m.title + "\n\n" : "") + (m.content || "");
+        return navigator.clipboard.writeText(text);
+      }).then(function () { toast("메모를 복사했습니다"); },
         function () { toast("복사에 실패했습니다", true); });
     });
     var del = el.querySelector('[data-act="del"]');
     if (del) del.addEventListener("click", function () { removeMemo(m.id); });
     var edit = el.querySelector('[data-act="edit"]');
-    if (edit) edit.addEventListener("click", function () { openMemoModal(m); });
+    if (edit) edit.addEventListener("click", function () {
+      ensureFull(m).then(function () { openMemoModal(m); })
+        .catch(function (e) { toast(e.message || "본문을 불러오지 못했습니다", true); });
+    });
     return el;
   }
 
