@@ -29,6 +29,7 @@ const INDEX_FILE = path.join(DATA_DIR, "index.json");
 const PORT = parseInt(process.env.PORT, 10) || 9999;
 const GIT_PUSH = /^(1|true|yes)$/i.test(process.env.GIT_PUSH || "");
 const MAX_BODY = 80 * 1024 * 1024; // 80MB
+const SNIPPET_LEN = 180; // index.json/목록에 담는 본문 요약 길이 (B: 슬림 인덱스)
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -75,12 +76,22 @@ function readMemos() {
   return memos;
 }
 
+// 목록/인덱스용 경량 항목: 본문 전체 대신 snippet + more 플래그만 담는다.
+// (전체 본문은 memo-<id>.json 에 있으며, 클라이언트가 필요 시 지연 로딩한다.)
+function slimEntry(m) {
+  const c = String(m.content || "");
+  const more = c.length > SNIPPET_LEN;
+  return {
+    id: m.id, title: m.title || "",
+    snippet: more ? c.slice(0, SNIPPET_LEN) : c, more: more,
+    tags: m.tags || [], color: m.color || "",
+    attachments: m.attachments || [],
+    createdAt: m.createdAt, updatedAt: m.updatedAt
+  };
+}
+
 function writeIndex(memos) {
-  const manifest = memos.map(m => ({
-    id: m.id, title: m.title, content: m.content, tags: m.tags, color: m.color,
-    attachments: m.attachments, createdAt: m.createdAt, updatedAt: m.updatedAt
-  }));
-  fs.writeFileSync(INDEX_FILE, JSON.stringify({ memos: manifest }, null, 2));
+  fs.writeFileSync(INDEX_FILE, JSON.stringify({ memos: memos.map(slimEntry) }, null, 2));
 }
 
 function git(args) {
@@ -346,7 +357,7 @@ const server = http.createServer(async (req, res) => {
       return sendJSON(res, 200, { ok: true, repo: repo, branch: branch, push: GIT_PUSH });
     }
     if (urlPath === "/api/memos" && req.method === "GET") {
-      return sendJSON(res, 200, { memos: readMemos() });
+      return sendJSON(res, 200, { memos: readMemos().map(slimEntry) });
     }
     if (urlPath === "/api/memos" && req.method === "POST") {
       return await handleCreate(req, res);

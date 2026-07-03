@@ -259,6 +259,18 @@ body {
   max-height: 260px;
   margin-bottom: 12px;
 }
+.more-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.more-btn:hover { text-decoration: underline; }
+.more-btn:disabled { opacity: 0.6; cursor: default; text-decoration: none; }
+
 .memo-tags {
   display: flex;
   flex-wrap: wrap;
