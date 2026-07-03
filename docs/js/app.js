@@ -417,9 +417,19 @@
     ensureObserver();
     fillViewport();
   }
+  // 포스트잇 색상/기울기: 메모 id 해시로 결정해 재렌더 시에도 일정하게 유지한다.
+  var STICKY_COUNT = 7;
+  var STICKY_ROT = [-1.5, 1.1, -0.7, 1.4, -1.1, 0.6, -0.4];
+  function stickyIndex(id) {
+    var s = String(id || ""), h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return h % STICKY_COUNT;
+  }
   function card(m) {
     var el = document.createElement("article");
-    el.className = "memo-card";
+    var pal = stickyIndex(m.id);
+    el.className = "memo-card sticky-" + pal;
+    el.style.setProperty("--rot", STICKY_ROT[pal] + "deg");
     var html = "";
     if (m.title) html += '<h3 class="memo-title">' + esc(m.title) + "</h3>";
     html += '<div class="memo-content">' + esc(m.content) + "</div>";
