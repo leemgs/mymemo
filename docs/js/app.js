@@ -342,12 +342,80 @@
     setAllowAnon: function (a) { return cfg.mode === "server" ? serverSetAllowAnon(a) : githubSetAllowAnon(a); }
   };
 
-  // ---- rendering ----
+  // ---- rendering (progressive: PAGE_SIZE 씩 점진적으로 그림) ----
+  // 메모가 많아도 한 번에 전부 DOM 에 그리지 않고, 초기 PAGE_SIZE 개만 그린 뒤
+  // 스크롤(IntersectionObserver) 또는 "더 보기" 버튼으로 이어서 렌더한다.
+  var PAGE_SIZE = 30;
+  var renderList = [];
+  var renderedCount = 0;
+  var moreObserver = null;
+
+  function appendCards(n) {
+    var frag = document.createDocumentFragment();
+    var end = Math.min(renderList.length, renderedCount + n);
+    for (var i = renderedCount; i < end; i++) frag.appendChild(card(renderList[i]));
+    memoGrid.appendChild(frag);
+    renderedCount = end;
+  }
+  function updateLoadMore() {
+    var wrap = $("loadMoreWrap");
+    if (!wrap) return;
+    var remaining = renderList.length - renderedCount;
+    if (remaining > 0) {
+      wrap.hidden = false;
+      $("loadMoreBtn").hidden = false;
+      $("loadMoreInfo").textContent = "전체 " + renderList.length + "개 중 " + renderedCount + "개 표시 · 남은 " + remaining + "개";
+    } else if (renderList.length > PAGE_SIZE) {
+      wrap.hidden = false;
+      $("loadMoreBtn").hidden = true;
+      $("loadMoreInfo").textContent = "전체 " + renderList.length + "개 모두 표시됨";
+    } else {
+      wrap.hidden = true;
+    }
+  }
+  // 뷰포트가 다 안 찼는데 남은 항목이 있으면 계속 채운다(초기/짧은 목록/무한스크롤 보조).
+  function fillViewport() {
+    var sentinel = $("scrollSentinel");
+    if (!sentinel) { updateLoadMore(); return; }
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    var guard = 0;
+    while (renderedCount < renderList.length && guard < 100) {
+      if (sentinel.getBoundingClientRect().top > vh + 300) break;
+      appendCards(PAGE_SIZE);
+      guard++;
+    }
+    updateLoadMore();
+  }
+  function loadMore() {
+    if (renderedCount >= renderList.length) return;
+    appendCards(PAGE_SIZE);
+    fillViewport();
+  }
+  function ensureObserver() {
+    if (moreObserver || !("IntersectionObserver" in window)) return;
+    var sentinel = $("scrollSentinel");
+    if (!sentinel) return;
+    moreObserver = new IntersectionObserver(function (entries) {
+      if (entries[0] && entries[0].isIntersecting) loadMore();
+    }, { rootMargin: "300px 0px" });
+    moreObserver.observe(sentinel);
+  }
   function render(memos) {
+    renderList = memos || [];
     memoGrid.innerHTML = "";
-    if (!memos.length) { emptyState.hidden = false; return; }
+    if (!renderList.length) {
+      emptyState.hidden = false;
+      renderedCount = 0;
+      updateLoadMore();
+      return;
+    }
     emptyState.hidden = true;
-    memos.forEach(function (m) { memoGrid.appendChild(card(m)); });
+    // 최초 로드는 PAGE_SIZE, 재렌더(수정/삭제 등) 시엔 이전에 보이던 개수를 유지해 위치 급변을 막는다.
+    var target = Math.min(renderList.length, Math.max(PAGE_SIZE, renderedCount));
+    renderedCount = 0;
+    appendCards(target);
+    ensureObserver();
+    fillViewport();
   }
   function card(m) {
     var el = document.createElement("article");
@@ -406,6 +474,7 @@
     emptyState.hidden = true;
     memoGrid.style.display = "none";
     statusBanner.hidden = true;
+    if ($("loadMoreWrap")) $("loadMoreWrap").hidden = true;
     loadingState.hidden = false;
     loadStart = Date.now();
     $("loadingSecs").textContent = "0.0";
@@ -709,6 +778,7 @@
   $("adminCheckBtn").addEventListener("click", checkConnection);
   $("pwChangeBtn").addEventListener("click", changePassword);
   $("anonApplyBtn").addEventListener("click", applyAnonSetting);
+  $("loadMoreBtn").addEventListener("click", loadMore);
   $("adminSaveBtn").addEventListener("click", function () {
     cfg = Object.assign({}, cfg, readAdminForm());
     // Keep using the injected Secret token when the admin didn't type a personal one.

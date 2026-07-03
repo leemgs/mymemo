@@ -55,6 +55,13 @@
     <div class="empty-state" id="emptyState" hidden>
       <p>아직 메모가 없습니다. 오른쪽 아래 <strong>+</strong> 버튼으로 첫 메모를 남겨보세요.</p>
     </div>
+
+    <!-- Load more (progressive rendering) -->
+    <div class="load-more-wrap" id="loadMoreWrap" hidden>
+      <button type="button" class="btn-secondary" id="loadMoreBtn">더 보기</button>
+      <p class="load-more-info" id="loadMoreInfo"></p>
+    </div>
+    <div id="scrollSentinel" aria-hidden="true"></div>
   </div>
 
   <!-- Floating add button -->
