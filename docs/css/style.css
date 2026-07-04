@@ -193,6 +193,68 @@ body {
 }
 
 /* Memo grid */
+/* 검색 & 태그 필터 바 */
+.filter-bar {
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f3f5f9;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.search-icon { font-size: 14px; opacity: 0.7; }
+.search-box input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14.5px;
+  outline: none;
+  color: #2b3442;
+}
+.search-clear {
+  border: none;
+  background: rgba(0, 0, 0, 0.12);
+  color: #fff;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 18px;
+  padding: 0;
+}
+.tag-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.tag-chip {
+  background: rgba(0, 0, 0, 0.06);
+  color: #45505f;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.tag-chip:hover { background: rgba(0, 0, 0, 0.12); }
+.tag-chip.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
 .memo-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
