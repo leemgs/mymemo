@@ -2,12 +2,14 @@
   "memos": [
     {
       "id": "20260703091815-0bo6",
-      "title": "quick new emmo refresh( odne)",
-      "content": "wow.. it is cleaned. \nquick new emmo refresh ( done)",
+      "title": "새로운 메모 작성시 리프레쉬 속도 테스트",
+      "snippet": "wow.. it is cleaned. \nquick new emmo refresh ( done)",
+      "more": false,
       "tags": [],
+      "color": "",
       "attachments": [],
       "createdAt": "2026-07-03T00:18:15.750Z",
-      "updatedAt": "2026-07-03T12:54:46.695Z"
+      "updatedAt": "2026-07-04T10:32:29.674Z"
     },
     {
       "id": "20260703083531-hqfx",
