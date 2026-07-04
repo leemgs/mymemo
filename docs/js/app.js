@@ -463,6 +463,67 @@
     ensureObserver();
     fillViewport();
   }
+
+  // ---- search & tag filter (C: 로드된 목록을 클라이언트에서 즉시 필터) ----
+  // 슬림 인덱스라 본문은 요약(snippet) 범위까지만 검색된다(전체 본문은 지연 로딩).
+  var activeQuery = "";
+  var activeTags = {};       // { tag: true } 선택된 태그
+  var activeTagCount = 0;
+  var EMPTY_DEFAULT_HTML = (emptyState.querySelector("p") || {}).innerHTML || "";
+
+  function buildTagFilter() {
+    var wrap = $("tagFilter");
+    if (!wrap) return;
+    var counts = {};
+    currentMemos.forEach(function (m) {
+      (m.tags || []).forEach(function (t) { counts[t] = (counts[t] || 0) + 1; });
+    });
+    // 더 이상 없는 태그는 선택 해제.
+    Object.keys(activeTags).forEach(function (t) { if (!counts[t]) { delete activeTags[t]; } });
+    activeTagCount = Object.keys(activeTags).length;
+    var tags = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a] || (a < b ? -1 : 1); });
+    wrap.innerHTML = "";
+    tags.forEach(function (t) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "tag-chip" + (activeTags[t] ? " active" : "");
+      b.textContent = "#" + t + " (" + counts[t] + ")";
+      b.addEventListener("click", function () {
+        if (activeTags[t]) { delete activeTags[t]; } else { activeTags[t] = true; }
+        b.classList.toggle("active");
+        applyFilter();
+      });
+      wrap.appendChild(b);
+    });
+    wrap.hidden = tags.length === 0;
+  }
+
+  function applyFilter() {
+    var q = activeQuery;
+    var selTags = Object.keys(activeTags);
+    var filtered = currentMemos.filter(function (m) {
+      for (var i = 0; i < selTags.length; i++) {
+        if ((m.tags || []).indexOf(selTags[i]) === -1) return false; // 선택 태그 모두 포함(AND)
+      }
+      if (q) {
+        var body = (m.content != null) ? m.content : (m.snippet || "");
+        var hay = ((m.title || "") + " " + body + " " + (m.tags || []).join(" ")).toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+    var filtersActive = !!q || selTags.length > 0;
+    var p = emptyState.querySelector("p");
+    if (p) p.innerHTML = filtersActive ? "🔍 검색/필터 결과가 없습니다." : EMPTY_DEFAULT_HTML;
+    var fb = $("filterBar");
+    if (fb) fb.hidden = currentMemos.length === 0;
+    renderedCount = 0;
+    render(filtered);
+  }
+
+  // 목록 데이터가 바뀐 뒤(로드/저장/수정/삭제) 태그칩을 다시 만들고 필터를 재적용한다.
+  function refreshView() { buildTagFilter(); applyFilter(); }
+
   // 포스트잇 색상/기울기.
   // 색: 메모에 color(팔레트 key)가 있으면 그 색, 없으면 id 해시로 자동 배정.
   // 기울기: 항상 id 해시로 결정해 재렌더 시에도 일정하게 유지한다.
@@ -566,6 +627,7 @@
     memoGrid.style.display = "none";
     statusBanner.hidden = true;
     if ($("loadMoreWrap")) $("loadMoreWrap").hidden = true;
+    if ($("filterBar")) $("filterBar").hidden = true;
     loadingState.hidden = false;
     loadStart = Date.now();
     $("loadingSecs").textContent = "0.0";
@@ -608,7 +670,7 @@
       currentMemos = memos;
       readOnly = !store.canWrite();
       updateBanner();
-      render(memos);
+      refreshView();
     }).catch(function (e) {
       hideLoading();
       readOnly = true;
@@ -635,7 +697,7 @@
       .then(function () {
         // 낙관적 업데이트: 삭제된 메모를 즉시 화면에서 제거 (재읽기 불필요).
         currentMemos = currentMemos.filter(function (m) { return m.id !== id; });
-        render(currentMemos);
+        refreshView();
         toast("삭제 및 Git 커밋 완료");
       })
       .catch(function (e) { toast(e.message || "삭제 실패", true); })
@@ -757,7 +819,7 @@
           } else {
             currentMemos = [savedMemo].concat(currentMemos);
           }
-          render(currentMemos);
+          refreshView();
         }
         toast(isEdit ? "수정 및 Git 커밋 완료" : "저장 및 Git 커밋 완료");
       })
@@ -899,6 +961,15 @@
   $("pwChangeBtn").addEventListener("click", changePassword);
   $("anonApplyBtn").addEventListener("click", applyAnonSetting);
   $("loadMoreBtn").addEventListener("click", loadMore);
+  $("searchInput").addEventListener("input", function () {
+    activeQuery = this.value.trim().toLowerCase();
+    $("searchClear").hidden = !this.value;
+    applyFilter();
+  });
+  $("searchClear").addEventListener("click", function () {
+    $("searchInput").value = ""; activeQuery = ""; this.hidden = true;
+    applyFilter(); $("searchInput").focus();
+  });
   $("adminSaveBtn").addEventListener("click", function () {
     cfg = Object.assign({}, cfg, readAdminForm());
     // Keep using the injected Secret token when the admin didn't type a personal one.

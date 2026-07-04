@@ -41,6 +41,16 @@
     <!-- Status banner (shown when server is offline) -->
     <div class="status-banner" id="statusBanner" hidden></div>
 
+    <!-- Search & tag filter -->
+    <div class="filter-bar" id="filterBar" hidden>
+      <div class="search-box">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input type="search" id="searchInput" placeholder="제목·내용·태그 검색" autocomplete="off" />
+        <button type="button" class="search-clear" id="searchClear" hidden aria-label="검색 지우기">×</button>
+      </div>
+      <div class="tag-filter" id="tagFilter" hidden></div>
+    </div>
+
     <!-- Loading state -->
     <div class="loading-state" id="loadingState" hidden>
       <div class="spinner" aria-hidden="true"></div>
