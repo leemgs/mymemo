@@ -1,4 +1,6 @@
 :root {
+  /* 라이트 전용 선언 — 모바일 크롬/엣지 자동 다크 테마의 색 왜곡(파스텔→회색) 방지 */
+  color-scheme: light;
   --bg: #eef1f5;
   --card-bg: #ffffff;
   --text: #1f2733;
