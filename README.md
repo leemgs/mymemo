@@ -11,6 +11,89 @@ Git 저장소 기반의 **온라인 포스트잇/메모 홈페이지**입니다.
 **검색/태그 필터** · 접근 암호(웹에서 변경) · **익명 접근 토글** ·
 대용량 대비(**진행형 렌더 · 슬림 인덱스 · 본문 지연 로딩**).
 
+## 🧩 한눈에 보기
+
+**서버(백엔드) 없이** 브라우저 자바스크립트 하나가 GitHub API를 직접 호출해 저장소에
+**읽고 · 커밋**하는 구조입니다. 정적 호스팅(GitHub Pages)에 올리면 그대로 동작합니다.
+
+```mermaid
+flowchart LR
+    subgraph U["🙍 사용자"]
+        V["방문자<br/>(열람)"]
+        A["관리자<br/>(작성·수정·삭제)"]
+    end
+
+    subgraph B["🌐 브라우저 (정적 프론트엔드 · docs/)"]
+        AU["auth.js<br/>접근 게이트<br/>(암호 / 익명)"]
+        AP["app.js<br/>목록·작성·검색·<br/>지연 로딩·커밋"]
+    end
+
+    subgraph G["🐙 GitHub 저장소 (&lt;owner&gt;/&lt;repo&gt;)"]
+        D["data/<br/>index.json · memo-*.json · attachments/"]
+    end
+
+    V --> AU
+    A --> AU
+    AU --> AP
+    AP -- "읽기: Contents API" --> D
+    AP -- "쓰기: Git Data API (PAT 필요)" --> D
+    AP -. "읽기 폴백: raw.githubusercontent.com" .-> D
+```
+
+| 구성 요소 (경로) | 역할 | 설명 |
+|---|---|---|
+| 🔐 [`docs/js/auth.js`](docs/js/auth.js) | 접근 게이트 | 접근 암호(`PASS_HASH`, SHA-256) 확인 · 익명 접근(`ALLOW_ANON`) 토글 |
+| ⚙️ [`docs/js/app.js`](docs/js/app.js) | 앱 로직 | 목록 읽기·작성·수정·삭제, 검색/태그 필터, 진행형 렌더, 본문 지연 로딩, GitHub 커밋 |
+| 🖼️ [`docs/index.html`](docs/index.html) · [`config.js`](docs/config.js) | 화면·설정 | 잠금화면 + 카드 UI + 모달 · 런타임 설정(owner/repo/branch, **토큰은 비움**) |
+| 🗂️ [`data/`](data/) | 데이터 저장소 | `index.json`(슬림 목록) · `memo-<id>.json`(본문 1건=1파일) · `attachments/`(첨부) |
+| 🖥️ [`server.js`](server.js) | (선택) 로컬 서버 | 토큰 없이 로컬 git으로 커밋하는 자체 호스팅 모드 (JSON API + 정적 서빙) |
+
+## 🔄 데이터 흐름 (Data Flow)
+
+**열람**은 누구나(토큰 불필요), **저장·수정·삭제**는 관리자만(쓰기 토큰 필요)입니다.
+아래는 페이지 접속부터 메모 커밋까지의 전체 흐름입니다.
+
+```mermaid
+sequenceDiagram
+    actor U as 사용자
+    participant AU as auth.js (게이트)
+    participant AP as app.js (앱)
+    participant GH as GitHub API
+    participant RAW as raw CDN (폴백)
+    participant D as data/ (저장소)
+
+    U->>AU: 페이지 접속
+    alt 익명 접근 ON
+        AU-->>AP: 잠금화면 건너뜀
+    else 접근 암호 필요
+        U->>AU: 암호 입력 (SHA-256 대조)
+        AU-->>AP: 통과
+    end
+
+    Note over AP,D: 📖 열람 (누구나)
+    AP->>GH: GET data/index.json (Contents API)
+    alt 정상
+        GH-->>AP: 슬림 목록(제목·요약·태그·색상)
+    else 403(한도)/401(토큰만료)
+        AP->>RAW: raw.githubusercontent.com 폴백
+        RAW-->>AP: 슬림 목록
+    end
+    AP-->>U: 카드 30개씩 진행형 렌더 (무한 스크롤)
+    U->>AP: "더 읽기"/수정/복사
+    AP->>GH: GET memo-<id>.json (본문 지연 로딩)
+    GH-->>AP: 전체 본문
+
+    Note over AP,D: ✍️ 저장·수정·삭제 (관리자, PAT 필요)
+    U->>AP: 작성/수정/삭제 (제목·내용·태그·색상·첨부)
+    AP->>GH: Git Data API — blob → tree → commit → ref
+    GH->>D: 한 번의 커밋으로 memo-*.json + attachments/ + index.json 반영
+    GH-->>AP: 커밋 완료
+    AP-->>U: 목록 갱신
+```
+
+> 💡 **핵심 원칙:** _읽기는 누구나 · 쓰기는 관리자 토큰으로._ 토큰(PAT)은 배포물에 굽지 않고
+> **관리자 브라우저의 localStorage에만** 저장되어, 공개 노출·자동 폐기 위험이 없습니다.
+
 ## 동작 방식
 
 - **접근 (잠금화면)** — 페이지에 들어가려면 암호를 입력합니다. **익명 접근**이 켜져 있으면
