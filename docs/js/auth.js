@@ -23,7 +23,7 @@
 
   // 익명 쓰기: true 이면 토큰 없이도 누구나 저장·수정·삭제할 수 있습니다.
   // (⚙ 관리자 설정 → "익명 쓰기 허용" 에서 토글되어 이 파일에 커밋됩니다.)
-  var ALLOW_ANON_WRITE = false;
+  var ALLOW_ANON_WRITE = true;
   window.MYMEMO_ALLOW_ANON_WRITE = ALLOW_ANON_WRITE;
 
   var screen = document.getElementById("lockScreen");
