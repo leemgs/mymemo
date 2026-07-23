@@ -201,6 +201,22 @@
 
         <hr class="admin-divider" />
         <div class="field">
+          <span class="field-label">✏️ 익명 쓰기</span>
+          <label class="anon-row">
+            <input type="checkbox" id="anonWriteToggle" />
+            <span>익명 쓰기 (토큰 없이 저장·수정·삭제) 허용</span>
+          </label>
+          <span class="field-hint">
+            켜면 <b>토큰 없이 누구나</b> 메모를 저장·수정·삭제할 수 있습니다. 익명 접근과 함께 켜면 완전히 열린 메모장이 됩니다.
+            설정은 <code>docs/js/auth.js</code>에 커밋되며, <b>쓰기 토큰(또는 서버 연결)</b>이 필요하고
+            <b>배포 재빌드 후(수 분) 모든 방문자</b>에게 적용됩니다.
+          </span>
+          <div class="pw-status" id="anonWriteStatus"></div>
+          <button type="button" class="btn-primary pw-change-btn" id="anonWriteApplyBtn">적용 (Git 커밋)</button>
+        </div>
+
+        <hr class="admin-divider" />
+        <div class="field">
           <span class="field-label">🔑 접근 암호 변경</span>
           <input type="password" id="pwCurrent" class="pw-input" placeholder="현재 암호" autocomplete="off" />
           <input type="password" id="pwNew" class="pw-input" placeholder="새 암호 (4자 이상)" autocomplete="new-password" />
