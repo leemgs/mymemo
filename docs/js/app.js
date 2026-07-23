@@ -339,6 +339,20 @@
       });
   }
 
+  // Toggle anonymous write by committing the ALLOW_ANON_WRITE flag in docs/js/auth.js.
+  var ALLOW_ANON_WRITE_RE = /var ALLOW_ANON_WRITE = (?:true|false);/;
+  function githubSetAllowAnonWrite(allow) {
+    return ghApi("GET", "/contents/docs/js/auth.js?ref=" + encodeURIComponent(cfg.branch) + "&_=" + new Date().getTime())
+      .then(function (res) {
+        var src = b64decode(res.content);
+        if (!ALLOW_ANON_WRITE_RE.test(src)) throw new Error("auth.js에서 ALLOW_ANON_WRITE를 찾을 수 없습니다");
+        var updated = src.replace(ALLOW_ANON_WRITE_RE, "var ALLOW_ANON_WRITE = " + (allow ? "true" : "false") + ";");
+        return commitFiles("chore: " + (allow ? "enable" : "disable") + " anonymous write", [
+          { path: "docs/js/auth.js", contentBase64: b64encode(updated) }
+        ]);
+      });
+  }
+
   // ---- local server (optional self-host) ----
   function sbase() { return (cfg.apiBase || "").replace(/\/+$/, ""); }
   function serverList() {
@@ -370,10 +384,17 @@
     return fetch(sbase() + "/api/anon", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ allow: !!allow }) })
       .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "변경 실패"); }); });
   }
+  function serverSetAllowAnonWrite(allow) {
+    return fetch(sbase() + "/api/anon-write", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ allow: !!allow }) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "변경 실패"); }); });
+  }
 
   // ---- store abstraction ----
   var store = {
-    canWrite: function () { return cfg.mode === "server" ? serverUp : (!!cfg.token && !tokenInvalid); },
+    canWrite: function () {
+      if (window.MYMEMO_ALLOW_ANON_WRITE) return true;
+      return cfg.mode === "server" ? serverUp : (!!cfg.token && !tokenInvalid);
+    },
     attachmentUrl: function (stored) {
       if (cfg.mode === "server") return sbase() + "/data/attachments/" + encodeURIComponent(stored);
       return "https://raw.githubusercontent.com/" + cfg.owner + "/" + cfg.repo + "/" +
@@ -385,7 +406,8 @@
     update: function (id, p) { return cfg.mode === "server" ? serverUpdate(id, p) : githubUpdate(id, p); },
     remove: function (id) { return cfg.mode === "server" ? serverRemove(id) : githubRemove(id); },
     changePassword: function (h) { return cfg.mode === "server" ? serverChangePassword(h) : githubChangePassword(h); },
-    setAllowAnon: function (a) { return cfg.mode === "server" ? serverSetAllowAnon(a) : githubSetAllowAnon(a); }
+    setAllowAnon: function (a) { return cfg.mode === "server" ? serverSetAllowAnon(a) : githubSetAllowAnon(a); },
+    setAllowAnonWrite: function (a) { return cfg.mode === "server" ? serverSetAllowAnonWrite(a) : githubSetAllowAnonWrite(a); }
   };
 
   // ---- rendering (progressive: PAGE_SIZE 씩 점진적으로 그림) ----
@@ -854,6 +876,9 @@
     // Reflect the current anonymous-access flag (from auth.js).
     $("anonToggle").checked = !!window.MYMEMO_ALLOW_ANON;
     $("anonStatus").textContent = ""; $("anonStatus").className = "pw-status";
+    // Reflect the current anonymous-write flag (from auth.js).
+    $("anonWriteToggle").checked = !!window.MYMEMO_ALLOW_ANON_WRITE;
+    $("anonWriteStatus").textContent = ""; $("anonWriteStatus").className = "pw-status";
     $("pwStatus").textContent = ""; $("pwStatus").className = "pw-status";
     adminModal.hidden = false;
   }
@@ -926,6 +951,39 @@
     });
   }
 
+  // ---- anonymous write toggle (commit ALLOW_ANON_WRITE flag to auth.js) ----
+  function applyAnonWriteSetting() {
+    var st = $("anonWriteStatus"), btn = $("anonWriteApplyBtn"), allow = $("anonWriteToggle").checked;
+    st.className = "pw-status"; st.textContent = "";
+    if (cfg.mode !== "server" && !cfg.token) {
+      st.className = "pw-status err";
+      st.textContent = "먼저 쓰기 토큰을 저장하세요.";
+      return;
+    }
+    if (cfg.mode === "server" && !serverUp) {
+      st.className = "pw-status err";
+      st.textContent = "먼저 서버에 연결하세요.";
+      return;
+    }
+    btn.disabled = true;
+    showBusy("익명 쓰기 설정을 변경하고 Git에 커밋하는 중…");
+    store.setAllowAnonWrite(allow).then(function () {
+      window.MYMEMO_ALLOW_ANON_WRITE = allow;
+      readOnly = !store.canWrite();
+      updateBanner();
+      refreshView();
+      st.className = "pw-status ok";
+      st.textContent = "✓ " + (allow ? "익명 쓰기 허용" : "익명 쓰기 차단") + " — 배포 재빌드 후(수 분) 모든 방문자에게 적용됩니다.";
+      toast("익명 쓰기 설정 변경 및 Git 커밋 완료");
+    }).catch(function (e) {
+      st.className = "pw-status err";
+      st.textContent = (e && e.message) || "변경 실패";
+      toast((e && e.message) || "변경 실패", true);
+    }).finally(function () {
+      hideBusy(); btn.disabled = false;
+    });
+  }
+
   // ---- anonymous access toggle (commit ALLOW_ANON flag to auth.js) ----
   function applyAnonSetting() {
     var st = $("anonStatus"), btn = $("anonApplyBtn"), allow = $("anonToggle").checked;
@@ -960,6 +1018,7 @@
   $("adminCheckBtn").addEventListener("click", checkConnection);
   $("pwChangeBtn").addEventListener("click", changePassword);
   $("anonApplyBtn").addEventListener("click", applyAnonSetting);
+  $("anonWriteApplyBtn").addEventListener("click", applyAnonWriteSetting);
   $("loadMoreBtn").addEventListener("click", loadMore);
   $("searchInput").addEventListener("input", function () {
     activeQuery = this.value.trim().toLowerCase();
