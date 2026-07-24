@@ -15,6 +15,238 @@
 (function () {
   "use strict";
 
+  // ---- i18n ----
+  var LANG_KEY = "mymemo_lang";
+  var currentLang = localStorage.getItem(LANG_KEY) || "ko";
+  var I18N = {
+    ko: {
+      "server.note": "관리자PC가 꺼져있으면 페이지는 쉽니다",
+      "admin.btn": "⚙ 관리자 설정",
+      "github.title": "GitHub 저장소 열기",
+      "lock.sub": "접근하려면 암호를 입력하세요",
+      "lock.placeholder": "암호를 입력하세요",
+      "lock.btn": "입장하기",
+      "lock.foot": "📢 모두의 메모 · 인가된 사용자만 접근하세요",
+      "search.placeholder": "제목·내용·태그 검색",
+      "loading.text": "GitHub에서 메모를 불러오는 중…",
+      "empty.text": "아직 메모가 없습니다. 오른쪽 아래 <strong>+</strong> 버튼으로 첫 메모를 남겨보세요.",
+      "loadmore.btn": "더 보기",
+      "fab.title": "새 메모 작성",
+      "memo.title.label": "제목",
+      "memo.title.ph": "제목을 입력하세요 (선택)",
+      "memo.content.label": "내용",
+      "memo.content.ph": "메모 내용을 입력하세요",
+      "memo.tags.label": "태그",
+      "memo.tags.ph": "쉼표로 구분 (예: 반도체, 협약, 공지)",
+      "memo.color.label": "색상",
+      "memo.color.hint": "포스트잇 색을 고르세요. <b>자동</b>은 메모마다 색이 자동 배정됩니다.",
+      "memo.existattach.label": "기존 첨부파일",
+      "memo.existattach.hint": "체크를 해제하면 저장 시 해당 파일이 삭제됩니다.",
+      "memo.files.label": "파일 첨부",
+      "memo.files.add": "첨부파일 추가",
+      "memo.files.hint": "여러 파일 선택 가능 · 파일당 최대 10MB",
+      "btn.cancel": "취소",
+      "admin.check.btn": "연결 확인",
+      "admin.save.btn": "저장",
+      "anon.label": "👀 익명 접근",
+      "anon.toggle": "익명 접근 (로그인 접근 암호 불필요) 허용",
+      "anonwrite.label": "✏️ 익명 쓰기",
+      "anonwrite.toggle": "익명 쓰기 (토큰 없이 저장·수정·삭제) 허용",
+      "apply.btn": "적용 (Git 커밋)",
+      "pw.label": "🔑 접근 암호 변경",
+      "pw.current.ph": "현재 암호",
+      "pw.new.ph": "새 암호 (4자 이상)",
+      "pw.new2.ph": "새 암호 확인",
+      "pw.change.btn": "암호 변경 (Git 커밋)",
+      "busy.sub": "GitHub에 Git 커밋 중입니다. 잠시만 기다려 주세요.",
+      "card.more": "더 읽기",
+      "card.copy": "⧉ 복사",
+      "card.edit": "수정",
+      "card.del": "삭제",
+      "card.modified": "(수정됨)",
+      "card.am": "오전",
+      "card.pm": "오후",
+      "modal.new": "새 메모 작성",
+      "modal.edit": "메모 수정",
+      "save.btn": "저장 (Git 커밋)",
+      "update.btn": "수정 저장 (Git 커밋)",
+      "saving": "저장 중...",
+      "updating": "수정 중...",
+      "confirm.del": "이 메모를 삭제할까요? (Git에서도 삭제 커밋됩니다)",
+      "toast.copied": "메모를 복사했습니다",
+      "toast.copy.fail": "복사에 실패했습니다",
+      "toast.deleted": "삭제 및 Git 커밋 완료",
+      "toast.saved": "저장 및 Git 커밋 완료",
+      "toast.updated": "수정 및 Git 커밋 완료",
+      "toast.need.content": "내용을 입력하세요",
+      "toast.file.too.big": "10MB를 초과하는 파일이 있습니다",
+      "toast.settings.saved": "설정을 저장했습니다",
+      "toast.anon.done": "익명 접근 설정 변경 및 Git 커밋 완료",
+      "toast.anonwrite.done": "익명 쓰기 설정 변경 및 Git 커밋 완료",
+      "toast.pw.done": "접근 암호 변경 및 Git 커밋 완료",
+      "busy.del": "메모를 삭제하고 Git에 커밋하는 중…",
+      "busy.save": "메모를 저장하고 Git에 커밋하는 중…",
+      "busy.update": "메모를 수정하고 Git에 커밋하는 중…",
+      "busy.pw": "접근 암호를 변경하고 Git에 커밋하는 중…",
+      "busy.anon": "익명 접근 설정을 변경하고 Git에 커밋하는 중…",
+      "busy.anonwrite": "익명 쓰기 설정을 변경하고 Git에 커밋하는 중…",
+      "banner.server.offline": "⚠ 관리자 PC(server.js)에 연결할 수 없어 읽기 전용입니다. ⚙ 관리자 설정에서 서버 주소를 확인하세요.",
+      "banner.token.invalid": "⚠ GitHub 토큰이 유효하지 않아(만료·폐기) 열람 전용으로 표시 중입니다. 새 토큰으로 갱신하세요.",
+      "banner.readonly": "🔒 읽기 전용 모드입니다. 메모를 저장하려면 ⚙ 관리자 설정에서 GitHub 토큰을 입력하세요.",
+      "err.load.fail": "⚠ 메모를 불러오지 못했습니다",
+      "err.full.fail": "본문을 불러오지 못했습니다",
+      "err.no.memo": "수정할 메모를 찾을 수 없습니다",
+      "err.need.token": "저장하려면 GitHub 토큰이 필요합니다",
+      "err.server.offline": "서버가 오프라인이라 저장할 수 없습니다",
+      "err.need.token.first": "먼저 쓰기 토큰을 저장하세요.",
+      "err.need.server": "먼저 서버에 연결하세요.",
+      "err.pw.wrong": "현재 암호가 올바르지 않습니다.",
+      "err.pw.short": "새 암호는 4자 이상이어야 합니다.",
+      "err.pw.mismatch": "새 암호 확인이 일치하지 않습니다.",
+      "ok.pw.changed": "✓ 변경 완료. 배포 재빌드 후(수 분) 모든 기기에 적용됩니다.",
+      "ok.anon.on": "✓ 익명 접근 허용 — 배포 재빌드 후(수 분) 모든 방문자에게 적용됩니다.",
+      "ok.anon.off": "✓ 익명 접근 차단 — 배포 재빌드 후(수 분) 모든 방문자에게 적용됩니다.",
+      "ok.anonwrite.on": "✓ 익명 쓰기 허용 — 배포 재빌드 후(수 분) 모든 방문자에게 적용됩니다.",
+      "ok.anonwrite.off": "✓ 익명 쓰기 차단 — 배포 재빌드 후(수 분) 모든 방문자에게 적용됩니다.",
+      "conn.checking": "확인 중...",
+      "conn.server.ok": "✓ 서버 연결됨 · ",
+      "conn.server.fail": "✗ 서버에 연결할 수 없습니다.",
+      "conn.github.ok.token": " · 토큰 인증됨",
+      "conn.github.ok.notoken": " · 열람 전용(토큰 없음)",
+      "loadmore.info": function(total, shown, left) { return "전체 " + total + "개 중 " + shown + "개 표시 · 남은 " + left + "개"; },
+      "loadmore.all": function(total) { return "전체 " + total + "개 모두 표시됨"; },
+      "lock.error": "암호가 올바르지 않습니다",
+      "search.empty": "🔍 검색/필터 결과가 없습니다."
+    },
+    en: {
+      "server.note": "The page may be unavailable when the admin PC is offline",
+      "admin.btn": "⚙ Admin Settings",
+      "github.title": "Open GitHub repository",
+      "lock.sub": "Enter password to access",
+      "lock.placeholder": "Enter password",
+      "lock.btn": "Enter",
+      "lock.foot": "📢 My Memo · Authorized users only",
+      "search.placeholder": "Search title, content, or tags",
+      "loading.text": "Loading memos from GitHub…",
+      "empty.text": "No memos yet. Use the <strong>+</strong> button at the bottom right to add your first memo.",
+      "loadmore.btn": "Load more",
+      "fab.title": "Add new memo",
+      "memo.title.label": "Title",
+      "memo.title.ph": "Title (optional)",
+      "memo.content.label": "Content",
+      "memo.content.ph": "Enter memo content",
+      "memo.tags.label": "Tags",
+      "memo.tags.ph": "Comma-separated (e.g. work, meeting, idea)",
+      "memo.color.label": "Color",
+      "memo.color.hint": "Choose sticky note color. <b>Auto</b> assigns a color per memo.",
+      "memo.existattach.label": "Existing attachments",
+      "memo.existattach.hint": "Unchecking will delete the file on save.",
+      "memo.files.label": "Attach file",
+      "memo.files.add": "Add attachment",
+      "memo.files.hint": "Multiple files · Max 10MB per file",
+      "btn.cancel": "Cancel",
+      "admin.check.btn": "Check connection",
+      "admin.save.btn": "Save",
+      "anon.label": "👀 Anonymous Access",
+      "anon.toggle": "Allow anonymous access (no login password required)",
+      "anonwrite.label": "✏️ Anonymous Write",
+      "anonwrite.toggle": "Allow anonymous write (save/edit/delete without token)",
+      "apply.btn": "Apply (Git commit)",
+      "pw.label": "🔑 Change Access Password",
+      "pw.current.ph": "Current password",
+      "pw.new.ph": "New password (min 4 chars)",
+      "pw.new2.ph": "Confirm new password",
+      "pw.change.btn": "Change Password (Git commit)",
+      "busy.sub": "Committing to GitHub. Please wait.",
+      "card.more": "Read more",
+      "card.copy": "⧉ Copy",
+      "card.edit": "Edit",
+      "card.del": "Delete",
+      "card.modified": "(edited)",
+      "card.am": "AM",
+      "card.pm": "PM",
+      "modal.new": "New Memo",
+      "modal.edit": "Edit Memo",
+      "save.btn": "Save (Git commit)",
+      "update.btn": "Update (Git commit)",
+      "saving": "Saving...",
+      "updating": "Updating...",
+      "confirm.del": "Delete this memo? (Will also be removed from Git)",
+      "toast.copied": "Memo copied",
+      "toast.copy.fail": "Copy failed",
+      "toast.deleted": "Deleted and committed to Git",
+      "toast.saved": "Saved and committed to Git",
+      "toast.updated": "Updated and committed to Git",
+      "toast.need.content": "Please enter content",
+      "toast.file.too.big": "A file exceeds the 10MB limit",
+      "toast.settings.saved": "Settings saved",
+      "toast.anon.done": "Anonymous access setting committed to Git",
+      "toast.anonwrite.done": "Anonymous write setting committed to Git",
+      "toast.pw.done": "Password changed and committed to Git",
+      "busy.del": "Deleting memo and committing to Git…",
+      "busy.save": "Saving memo and committing to Git…",
+      "busy.update": "Updating memo and committing to Git…",
+      "busy.pw": "Changing password and committing to Git…",
+      "busy.anon": "Updating anonymous access setting and committing to Git…",
+      "busy.anonwrite": "Updating anonymous write setting and committing to Git…",
+      "banner.server.offline": "⚠ Cannot connect to admin PC (server.js) — read-only mode. Check the server address in ⚙ Admin Settings.",
+      "banner.token.invalid": "⚠ GitHub token is invalid (expired/revoked) — read-only mode. Please update your token.",
+      "banner.readonly": "🔒 Read-only mode. To save memos, enter a GitHub token in ⚙ Admin Settings.",
+      "err.load.fail": "⚠ Failed to load memos",
+      "err.full.fail": "Failed to load memo content",
+      "err.no.memo": "Memo not found",
+      "err.need.token": "A GitHub token is required to save",
+      "err.server.offline": "Cannot save — server is offline",
+      "err.need.token.first": "Please save a write token first.",
+      "err.need.server": "Please connect to the server first.",
+      "err.pw.wrong": "Current password is incorrect.",
+      "err.pw.short": "New password must be at least 4 characters.",
+      "err.pw.mismatch": "New passwords do not match.",
+      "ok.pw.changed": "✓ Done. Will apply to all devices after rebuild (a few minutes).",
+      "ok.anon.on": "✓ Anonymous access enabled — will apply after rebuild (a few minutes).",
+      "ok.anon.off": "✓ Anonymous access disabled — will apply after rebuild (a few minutes).",
+      "ok.anonwrite.on": "✓ Anonymous write enabled — will apply after rebuild (a few minutes).",
+      "ok.anonwrite.off": "✓ Anonymous write disabled — will apply after rebuild (a few minutes).",
+      "conn.checking": "Checking...",
+      "conn.server.ok": "✓ Server connected · ",
+      "conn.server.fail": "✗ Cannot connect to server.",
+      "conn.github.ok.token": " · token authenticated",
+      "conn.github.ok.notoken": " · read-only (no token)",
+      "loadmore.info": function(total, shown, left) { return "Showing " + shown + " of " + total + " · " + left + " more"; },
+      "loadmore.all": function(total) { return "All " + total + " memos shown"; },
+      "lock.error": "Incorrect password",
+      "search.empty": "🔍 No results for current search/filter."
+    }
+  };
+  function T(key) {
+    var t = I18N[currentLang] || I18N.ko;
+    return (key in t) ? t[key] : (I18N.ko[key] || key);
+  }
+  function applyI18n() {
+    document.querySelectorAll("[data-i18n]").forEach(function(el) {
+      el.innerHTML = T(el.getAttribute("data-i18n"));
+    });
+    document.querySelectorAll("[data-i18n-ph]").forEach(function(el) {
+      el.placeholder = T(el.getAttribute("data-i18n-ph"));
+    });
+    document.querySelectorAll("[data-i18n-title]").forEach(function(el) {
+      el.title = T(el.getAttribute("data-i18n-title"));
+    });
+    // Mark active lang button
+    var koBtn = document.getElementById("langKo"), enBtn = document.getElementById("langEn");
+    if (koBtn) koBtn.classList.toggle("active", currentLang === "ko");
+    if (enBtn) enBtn.classList.toggle("active", currentLang === "en");
+  }
+  function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem(LANG_KEY, lang);
+    document.documentElement.lang = lang;
+    applyI18n();
+    updateBanner();
+    updateLoadMore();
+    if (currentMemos && currentMemos.length) refreshView();
+  }
+
   var CFG_KEY = "mymemo_cfg";
 
   // ---- config ----
@@ -67,10 +299,6 @@
   var memoGrid = $("memoGrid");
   var emptyState = $("emptyState");
   var statusBanner = $("statusBanner");
-  function tr(ko, en) {
-    return window.mymemoI18n ? window.mymemoI18n.t(ko, en) : ko;
-  }
-
   function toast(msg, isErr) {
     var t = $("toast");
     t.textContent = msg;
@@ -86,14 +314,14 @@
   function fmtDate(iso) {
     var d = new Date(iso);
     if (isNaN(d)) return "";
-    if (window.mymemoI18n && window.mymemoI18n.getLang() === "en") {
+    if (currentLang === "en") {
       return new Intl.DateTimeFormat("en", {
         year: "numeric", month: "short", day: "2-digit",
         hour: "2-digit", minute: "2-digit", second: "2-digit"
       }).format(d);
     }
     var p = function (n) { return (n < 10 ? "0" : "") + n; };
-    var h = d.getHours(), ampm = h < 12 ? "오전" : "오후", h12 = h % 12 || 12;
+    var h = d.getHours(), ampm = h < 12 ? T("card.am") : T("card.pm"), h12 = h % 12 || 12;
     return d.getFullYear() + ". " + p(d.getMonth() + 1) + ". " + p(d.getDate()) +
       ". " + ampm + " " + p(h12) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
   }
@@ -441,11 +669,11 @@
     if (remaining > 0) {
       wrap.hidden = false;
       $("loadMoreBtn").hidden = false;
-      $("loadMoreInfo").textContent = "전체 " + renderList.length + "개 중 " + renderedCount + "개 표시 · 남은 " + remaining + "개";
+      $("loadMoreInfo").textContent = T("loadmore.info")(renderList.length, renderedCount, remaining);
     } else if (renderList.length > PAGE_SIZE) {
       wrap.hidden = false;
       $("loadMoreBtn").hidden = true;
-      $("loadMoreInfo").textContent = "전체 " + renderList.length + "개 모두 표시됨";
+      $("loadMoreInfo").textContent = T("loadmore.all")(renderList.length);
     } else {
       wrap.hidden = true;
     }
@@ -545,7 +773,7 @@
     });
     var filtersActive = !!q || selTags.length > 0;
     var p = emptyState.querySelector("p");
-    if (p) p.innerHTML = filtersActive ? "🔍 검색/필터 결과가 없습니다." : EMPTY_DEFAULT_HTML;
+    if (p) p.innerHTML = filtersActive ? T("search.empty") : T("empty.text");
     var fb = $("filterBar");
     if (fb) fb.hidden = currentMemos.length === 0;
     renderedCount = 0;
@@ -592,7 +820,7 @@
     if (m.title) html += '<h3 class="memo-title">' + esc(m.title) + "</h3>";
     var body = (m.content != null) ? m.content : (m.snippet || "");
     html += '<div class="memo-content">' + esc(body) +
-      (m.more ? '… <button class="more-btn" data-act="more">더 읽기</button>' : "") + "</div>";
+      (m.more ? '… <button class="more-btn" data-act="more">' + T("card.more") + '</button>' : "") + "</div>";
     if (m.tags && m.tags.length) {
       html += '<div class="memo-tags">' + m.tags.map(function (t) {
         return '<span class="tag">#' + esc(t) + "</span>"; }).join("") + "</div>";
@@ -604,36 +832,36 @@
           (a.size ? ' <span style="color:#8a94a6">(' + humanSize(a.size) + ")</span>" : "") + "</a>";
       }).join("") + "</div>";
     }
-    var dateText = fmtDate(m.createdAt) + (m.updatedAt ? " (수정됨)" : "");
+    var dateText = fmtDate(m.createdAt) + (m.updatedAt ? " " + T("card.modified") : "");
     html += '<div class="memo-footer"><span class="memo-date">' + esc(dateText) + "</span>" +
-      '<span class="memo-actions"><button class="icon-btn" data-act="copy">⧉ 복사</button>' +
+      '<span class="memo-actions"><button class="icon-btn" data-act="copy">' + T("card.copy") + '</button>' +
       (readOnly ? "" :
-        '<button class="icon-btn" data-act="edit">수정</button>' +
-        '<button class="icon-btn" data-act="del">삭제</button>') + "</span></div>";
+        '<button class="icon-btn" data-act="edit">' + T("card.edit") + '</button>' +
+        '<button class="icon-btn" data-act="del">' + T("card.del") + '</button>') + "</span></div>";
     el.innerHTML = html;
 
     var moreBtn = el.querySelector('[data-act="more"]');
     if (moreBtn) moreBtn.addEventListener("click", function () {
-      moreBtn.disabled = true; moreBtn.textContent = "불러오는 중…";
+      moreBtn.disabled = true; moreBtn.textContent = "…";
       ensureFull(m).then(function () { el.replaceWith(card(m)); })
         .catch(function (e) {
-          moreBtn.disabled = false; moreBtn.textContent = "더 읽기";
-          toast(e.message || "본문을 불러오지 못했습니다", true);
+          moreBtn.disabled = false; moreBtn.textContent = T("card.more");
+          toast(e.message || T("err.full.fail"), true);
         });
     });
     el.querySelector('[data-act="copy"]').addEventListener("click", function () {
       ensureFull(m).then(function () {
         var text = (m.title ? m.title + "\n\n" : "") + (m.content || "");
         return navigator.clipboard.writeText(text);
-      }).then(function () { toast("메모를 복사했습니다"); },
-        function () { toast("복사에 실패했습니다", true); });
+      }).then(function () { toast(T("toast.copied")); },
+        function () { toast(T("toast.copy.fail"), true); });
     });
     var del = el.querySelector('[data-act="del"]');
     if (del) del.addEventListener("click", function () { removeMemo(m.id); });
     var edit = el.querySelector('[data-act="edit"]');
     if (edit) edit.addEventListener("click", function () {
       ensureFull(m).then(function () { openMemoModal(m); })
-        .catch(function (e) { toast(e.message || "본문을 불러오지 못했습니다", true); });
+        .catch(function (e) { toast(e.message || T("err.full.fail"), true); });
     });
     return el;
   }
@@ -642,11 +870,11 @@
     if (!readOnly) { statusBanner.hidden = true; return; }
     statusBanner.hidden = false;
     if (cfg.mode === "server") {
-      statusBanner.textContent = "⚠ 관리자 PC(server.js)에 연결할 수 없어 읽기 전용입니다. ⚙ 관리자 설정에서 서버 주소를 확인하세요.";
+      statusBanner.textContent = T("banner.server.offline");
     } else if (tokenInvalid) {
-      statusBanner.textContent = "⚠ GitHub 토큰이 유효하지 않아(만료·폐기) 열람 전용으로 표시 중입니다. 새 토큰으로 갱신하세요. (공개 배포된 토큰은 GitHub 보안 스캐닝에 의해 자동 폐기될 수 있습니다.)";
+      statusBanner.textContent = T("banner.token.invalid");
     } else {
-      statusBanner.textContent = "🔒 읽기 전용 모드입니다. 메모를 저장하려면 ⚙ 관리자 설정에서 GitHub 토큰을 입력하세요.";
+      statusBanner.textContent = T("banner.readonly");
     }
   }
 
@@ -707,7 +935,7 @@
       readOnly = true;
       serverUp = false;
       statusBanner.hidden = false;
-      statusBanner.textContent = "⚠ 메모를 불러오지 못했습니다: " + e.message + " (⚙ 관리자 설정 확인)";
+      statusBanner.textContent = T("err.load.fail") + ": " + e.message;
       render([]);
     });
   }
@@ -722,17 +950,14 @@
     });
   }
   function removeMemo(id) {
-    if (!confirm(tr(
-      "이 메모를 삭제할까요? (Git에서도 삭제 커밋됩니다)",
-      "Delete this memo? The deletion will also be committed to Git."
-    ))) return;
-    showBusy("메모를 삭제하고 Git에 커밋하는 중…");
+    if (!confirm(T("confirm.del"))) return;
+    showBusy(T("busy.del"));
     store.remove(id)
       .then(function () {
         // 낙관적 업데이트: 삭제된 메모를 즉시 화면에서 제거 (재읽기 불필요).
         currentMemos = currentMemos.filter(function (m) { return m.id !== id; });
         refreshView();
-        toast("삭제 및 Git 커밋 완료");
+        toast(T("toast.deleted"));
       })
       .catch(function (e) { toast(e.message || "삭제 실패", true); })
       .finally(function () { hideBusy(); });
@@ -787,26 +1012,26 @@
   function openMemoModal(memo) {
     if (readOnly) {
       openAdminModal();
-      toast(cfg.mode === "server" ? "서버가 오프라인이라 저장할 수 없습니다" : "저장하려면 GitHub 토큰이 필요합니다", true);
+      toast(cfg.mode === "server" ? T("err.server.offline") : T("err.need.token"), true);
       return;
     }
     memoForm.reset();
     buildColorPicker();
     if (memo && memo.id) {
       editingId = memo.id;
-      $("memoModalTitle").textContent = "메모 수정";
+      $("memoModalTitle").textContent = T("modal.edit");
       $("memoTitle").value = memo.title || "";
       $("memoContent").value = memo.content || "";
       $("memoTags").value = (memo.tags || []).join(", ");
-      $("fileFieldLabel").textContent = "첨부파일 추가";
-      $("saveBtn").textContent = "수정 저장 (Git 커밋)";
+      $("fileFieldLabel").textContent = T("memo.files.add");
+      $("saveBtn").textContent = T("update.btn");
       setSelectedColor(memo.color || "");
       renderExistingAttachments(memo);
     } else {
       editingId = null;
-      $("memoModalTitle").textContent = "새 메모 작성";
-      $("fileFieldLabel").textContent = "파일 첨부";
-      $("saveBtn").textContent = "저장 (Git 커밋)";
+      $("memoModalTitle").textContent = T("modal.new");
+      $("fileFieldLabel").textContent = T("memo.files.label");
+      $("saveBtn").textContent = T("save.btn");
       setSelectedColor("");
       $("existingAttachField").hidden = true;
       $("existingAttachList").innerHTML = "";
@@ -822,18 +1047,18 @@
     var isEdit = !!editingId;
     var idForEdit = editingId;
     var content = $("memoContent").value.trim();
-    if (!content) { toast("내용을 입력하세요", true); return; }
+    if (!content) { toast(T("toast.need.content"), true); return; }
     var tags = $("memoTags").value.split(",").map(function (t) { return t.trim(); }).filter(Boolean);
     var files = Array.prototype.slice.call($("memoFiles").files);
-    if (files.some(function (f) { return f.size > 10 * 1024 * 1024; })) { toast("10MB를 초과하는 파일이 있습니다", true); return; }
+    if (files.some(function (f) { return f.size > 10 * 1024 * 1024; })) { toast(T("toast.file.too.big"), true); return; }
 
     // 유지할 기존 첨부파일 (체크된 것)
     var keep = Array.prototype.slice.call($("existingAttachList").querySelectorAll('input[type="checkbox"]:checked'))
       .map(function (c) { return c.getAttribute("data-stored"); });
 
-    var defaultBtnText = isEdit ? "수정 저장 (Git 커밋)" : "저장 (Git 커밋)";
-    saveBtn.disabled = true; saveBtn.textContent = isEdit ? "수정 중..." : "저장 중...";
-    showBusy((isEdit ? "메모를 수정하고" : "메모를 저장하고") + " Git에 커밋하는 중…");
+    var defaultBtnText = isEdit ? T("update.btn") : T("save.btn");
+    saveBtn.disabled = true; saveBtn.textContent = isEdit ? T("updating") : T("saving");
+    showBusy(isEdit ? T("busy.update") : T("busy.save"));
     Promise.all(files.map(function (f) {
       return readFileAsDataURL(f).then(function (u) { return { name: f.name, size: f.size, dataUrl: u }; });
     }))
@@ -855,7 +1080,7 @@
           }
           refreshView();
         }
-        toast(isEdit ? "수정 및 Git 커밋 완료" : "저장 및 Git 커밋 완료");
+        toast(isEdit ? T("toast.updated") : T("toast.saved"));
       })
       .catch(function (e) { toast(e.message || (isEdit ? "수정 실패" : "저장 실패"), true); })
       .finally(function () {
@@ -909,19 +1134,19 @@
   }
   function checkConnection() {
     var status = $("adminStatus");
-    status.textContent = "확인 중..."; status.className = "admin-status";
+    status.textContent = T("conn.checking"); status.className = "admin-status";
     var probe = readAdminForm();
     var saved = cfg; cfg = Object.assign({}, cfg, probe); // temporarily use form values
     var done = function () { cfg = saved; };
     if (probe.mode === "server") {
       fetch(sbase() + "/api/health", { cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
-        .then(function (j) { status.textContent = "✓ 서버 연결됨 · " + (j.repo || "repo") + " (" + (j.branch || "") + ")"; status.className = "admin-status ok"; })
-        .catch(function () { status.textContent = "✗ 서버에 연결할 수 없습니다."; status.className = "admin-status err"; })
+        .then(function (j) { status.textContent = T("conn.server.ok") + (j.repo || "repo") + " (" + (j.branch || "") + ")"; status.className = "admin-status ok"; })
+        .catch(function () { status.textContent = T("conn.server.fail"); status.className = "admin-status err"; })
         .finally(done);
     } else {
       ghApi("GET", "").then(function (r) {
-        var extra = probe.token ? " · 토큰 인증됨" : " · 열람 전용(토큰 없음)";
-        status.textContent = "✓ 저장소 확인됨: " + r.full_name + " (" + (r.default_branch || "") + ")" + extra;
+        var extra = probe.token ? T("conn.github.ok.token") : T("conn.github.ok.notoken");
+        status.textContent = "✓ " + r.full_name + " (" + (r.default_branch || "") + ")" + extra;
         status.className = "admin-status ok";
       }).catch(function (e) { status.textContent = "✗ " + e.message; status.className = "admin-status err"; })
         .finally(done);
@@ -934,30 +1159,30 @@
     st.className = "pw-status"; st.textContent = "";
     if (!store.canWrite()) {
       st.className = "pw-status err";
-      st.textContent = cfg.mode === "server" ? "먼저 서버에 연결하세요." : "먼저 쓰기 토큰을 저장하세요.";
+      st.textContent = cfg.mode === "server" ? T("err.need.server") : T("err.need.token.first");
       return;
     }
     var cur = $("pwCurrent").value, np = $("pwNew").value, np2 = $("pwNew2").value;
-    if (np.length < 4) { st.className = "pw-status err"; st.textContent = "새 암호는 4자 이상이어야 합니다."; return; }
-    if (np !== np2) { st.className = "pw-status err"; st.textContent = "새 암호 확인이 일치하지 않습니다."; return; }
+    if (np.length < 4) { st.className = "pw-status err"; st.textContent = T("err.pw.short"); return; }
+    if (np !== np2) { st.className = "pw-status err"; st.textContent = T("err.pw.mismatch"); return; }
 
     var curHash = window.MYMEMO_PASS_HASH;
     sha256Hex(cur).then(function (h) {
-      if (curHash && h !== curHash) { var e = new Error("현재 암호가 올바르지 않습니다."); e.handled = true; throw e; }
+      if (curHash && h !== curHash) { var e = new Error(T("err.pw.wrong")); e.handled = true; throw e; }
       return sha256Hex(np);
     }).then(function (newHash) {
       btn.disabled = true;
-      showBusy("접근 암호를 변경하고 Git에 커밋하는 중…");
+      showBusy(T("busy.pw"));
       return store.changePassword(newHash).then(function () {
         $("pwCurrent").value = $("pwNew").value = $("pwNew2").value = "";
         st.className = "pw-status ok";
-        st.textContent = "✓ 변경 완료. 배포 재빌드 후(수 분) 모든 기기에 적용됩니다.";
-        toast("접근 암호 변경 및 Git 커밋 완료");
+        st.textContent = T("ok.pw.changed");
+        toast(T("toast.pw.done"));
       });
     }).catch(function (e) {
       st.className = "pw-status err";
-      st.textContent = (e && e.message) || "암호 변경 실패";
-      if (!(e && e.handled)) toast((e && e.message) || "암호 변경 실패", true);
+      st.textContent = (e && e.message) || T("err.pw.wrong");
+      if (!(e && e.handled)) toast((e && e.message) || T("err.pw.wrong"), true);
     }).finally(function () {
       hideBusy(); btn.disabled = false;
     });
@@ -969,24 +1194,24 @@
     st.className = "pw-status"; st.textContent = "";
     if (cfg.mode !== "server" && !cfg.token) {
       st.className = "pw-status err";
-      st.textContent = "먼저 쓰기 토큰을 저장하세요.";
+      st.textContent = T("err.need.token.first");
       return;
     }
     if (cfg.mode === "server" && !serverUp) {
       st.className = "pw-status err";
-      st.textContent = "먼저 서버에 연결하세요.";
+      st.textContent = T("err.need.server");
       return;
     }
     btn.disabled = true;
-    showBusy("익명 쓰기 설정을 변경하고 Git에 커밋하는 중…");
+    showBusy(T("busy.anonwrite"));
     store.setAllowAnonWrite(allow).then(function () {
       window.MYMEMO_ALLOW_ANON_WRITE = allow;
       readOnly = !store.canWrite();
       updateBanner();
       refreshView();
       st.className = "pw-status ok";
-      st.textContent = "✓ " + (allow ? "익명 쓰기 허용" : "익명 쓰기 차단") + " — 배포 재빌드 후(수 분) 모든 방문자에게 적용됩니다.";
-      toast("익명 쓰기 설정 변경 및 Git 커밋 완료");
+      st.textContent = allow ? T("ok.anonwrite.on") : T("ok.anonwrite.off");
+      toast(T("toast.anonwrite.done"));
     }).catch(function (e) {
       st.className = "pw-status err";
       st.textContent = (e && e.message) || "변경 실패";
@@ -1002,15 +1227,15 @@
     st.className = "pw-status"; st.textContent = "";
     if (!store.canWrite()) {
       st.className = "pw-status err";
-      st.textContent = cfg.mode === "server" ? "먼저 서버에 연결하세요." : "먼저 쓰기 토큰을 저장하세요.";
+      st.textContent = cfg.mode === "server" ? T("err.need.server") : T("err.need.token.first");
       return;
     }
     btn.disabled = true;
-    showBusy("익명 접근 설정을 변경하고 Git에 커밋하는 중…");
+    showBusy(T("busy.anon"));
     store.setAllowAnon(allow).then(function () {
       st.className = "pw-status ok";
-      st.textContent = "✓ " + (allow ? "익명 접근 허용" : "익명 접근 차단") + " — 배포 재빌드 후(수 분) 모든 방문자에게 적용됩니다.";
-      toast("익명 접근 설정 변경 및 Git 커밋 완료");
+      st.textContent = allow ? T("ok.anon.on") : T("ok.anon.off");
+      toast(T("toast.anon.done"));
     }).catch(function (e) {
       st.className = "pw-status err";
       st.textContent = (e && e.message) || "변경 실패";
@@ -1021,6 +1246,8 @@
   }
 
   // ---- wire up ----
+  $("langKo").addEventListener("click", function () { setLang("ko"); });
+  $("langEn").addEventListener("click", function () { setLang("en"); });
   $("fab").addEventListener("click", function () { openMemoModal(); });
   $("modalClose").addEventListener("click", closeMemoModal);
   $("cancelBtn").addEventListener("click", closeMemoModal);
@@ -1046,7 +1273,7 @@
     // Keep using the injected Secret token when the admin didn't type a personal one.
     var inj = window.MYMEMO_CONFIG || {};
     if (!cfg.token && inj.token) cfg.token = inj.token;
-    saveCfg(); closeAdminModal(); toast("설정을 저장했습니다"); refresh();
+    saveCfg(); closeAdminModal(); toast(T("toast.settings.saved")); refresh();
   });
   [memoModal, adminModal].forEach(function (m) {
     m.addEventListener("click", function (e) { if (e.target === m) m.hidden = true; });
@@ -1056,6 +1283,7 @@
   });
 
   // ---- init ----
+  applyI18n();
   // Start loading memos only once the access gate is unlocked, so the spinner
   // and timer are visible right when the user enters.
   if (window.__mymemoUnlocked) {
