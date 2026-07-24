@@ -74,6 +74,21 @@
       <p data-i18n="empty.text">아직 메모가 없습니다. 오른쪽 아래 <strong>+</strong> 버튼으로 첫 메모를 남겨보세요.</p>
     </div>
 
+    <!-- Per-page size selector -->
+    <div class="perpage-wrap" id="perpageWrap" hidden>
+      <label class="perpage-label" for="pageSizeSelect" data-i18n="perpage.label">페이지당</label>
+      <select id="pageSizeSelect" class="perpage-select">
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="30">30</option>
+        <option value="40">40</option>
+        <option value="50">50</option>
+        <option value="70">70</option>
+        <option value="100">100</option>
+      </select>
+      <span class="perpage-suffix" data-i18n="perpage.suffix">개 표시</span>
+    </div>
+
     <!-- Load more (progressive rendering) -->
     <div class="load-more-wrap" id="loadMoreWrap" hidden>
       <button type="button" class="btn-secondary" id="loadMoreBtn" data-i18n="loadmore.btn">더 보기</button>

@@ -116,7 +116,9 @@
       "loadmore.info": function(total, shown, left) { return "전체 " + total + "개 중 " + shown + "개 표시 · 남은 " + left + "개"; },
       "loadmore.all": function(total) { return "전체 " + total + "개 모두 표시됨"; },
       "lock.error": "암호가 올바르지 않습니다",
-      "search.empty": "🔍 검색/필터 결과가 없습니다."
+      "search.empty": "🔍 검색/필터 결과가 없습니다.",
+      "perpage.label": "페이지당",
+      "perpage.suffix": "개 표시"
     },
     en: {
       "server.note": "The page may be unavailable when the admin PC is offline",
@@ -215,7 +217,9 @@
       "loadmore.info": function(total, shown, left) { return "Showing " + shown + " of " + total + " · " + left + " more"; },
       "loadmore.all": function(total) { return "All " + total + " memos shown"; },
       "lock.error": "Incorrect password",
-      "search.empty": "🔍 No results for current search/filter."
+      "search.empty": "🔍 No results for current search/filter.",
+      "perpage.label": "Per page",
+      "perpage.suffix": "items"
     }
   };
   function T(key) {
@@ -650,7 +654,8 @@
   // ---- rendering (progressive: PAGE_SIZE 씩 점진적으로 그림) ----
   // 메모가 많아도 한 번에 전부 DOM 에 그리지 않고, 초기 PAGE_SIZE 개만 그린 뒤
   // 스크롤(IntersectionObserver) 또는 "더 보기" 버튼으로 이어서 렌더한다.
-  var PAGE_SIZE = 30;
+  var PERPAGE_KEY = "mymemo_perpage";
+  var PAGE_SIZE = parseInt(localStorage.getItem(PERPAGE_KEY)) || 30;
   var renderList = [];
   var renderedCount = 0;
   var moreObserver = null;
@@ -663,6 +668,8 @@
     renderedCount = end;
   }
   function updateLoadMore() {
+    var ppWrap = $("perpageWrap");
+    if (ppWrap) ppWrap.hidden = (renderList.length === 0);
     var wrap = $("loadMoreWrap");
     if (!wrap) return;
     var remaining = renderList.length - renderedCount;
@@ -1259,6 +1266,17 @@
   $("anonApplyBtn").addEventListener("click", applyAnonSetting);
   $("anonWriteApplyBtn").addEventListener("click", applyAnonWriteSetting);
   $("loadMoreBtn").addEventListener("click", loadMore);
+  (function () {
+    var sel = $("pageSizeSelect");
+    if (!sel) return;
+    sel.value = String(PAGE_SIZE);
+    sel.addEventListener("change", function () {
+      PAGE_SIZE = parseInt(this.value) || 30;
+      localStorage.setItem(PERPAGE_KEY, PAGE_SIZE);
+      renderedCount = 0;
+      refreshView();
+    });
+  }());
   $("searchInput").addEventListener("input", function () {
     activeQuery = this.value.trim().toLowerCase();
     $("searchClear").hidden = !this.value;
