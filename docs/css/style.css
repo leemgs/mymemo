@@ -212,6 +212,30 @@ body {
 }
 .github-link:hover { background: #e9edf3; color: #1b1f24; }
 
+/* Language switcher */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #f3f5f9;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+}
+.lang-btn {
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  letter-spacing: 0.3px;
+}
+.lang-btn:hover { color: var(--text); }
+.lang-btn.active { background: #fff; color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 .site-footer {
   margin-top: 36px;
   padding: 22px 10px 0;

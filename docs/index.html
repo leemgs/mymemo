@@ -17,14 +17,14 @@
     <div class="lock-card">
       <div class="lock-badge">🔒</div>
       <h1 class="lock-brand"><span>📢</span> My Memo</h1>
-      <p class="lock-sub">접근하려면 암호를 입력하세요</p>
+      <p class="lock-sub" data-i18n="lock.sub">접근하려면 암호를 입력하세요</p>
       <form id="lockForm" class="lock-form" autocomplete="off">
-        <input type="password" id="lockInput" placeholder="암호를 입력하세요" autocomplete="current-password" />
-        <button type="submit" class="lock-btn">입장하기</button>
+        <input type="password" id="lockInput" data-i18n-ph="lock.placeholder" placeholder="암호를 입력하세요" autocomplete="current-password" />
+        <button type="submit" class="lock-btn" data-i18n="lock.btn">입장하기</button>
       </form>
       <p class="lock-error" id="lockError">&nbsp;</p>
     </div>
-    <p class="lock-foot">📢 모두의 메모 · 인가된 사용자만 접근하세요</p>
+    <p class="lock-foot" data-i18n="lock.foot">📢 모두의 메모 · 인가된 사용자만 접근하세요</p>
   </div>
 
   <div class="container">
@@ -32,18 +32,17 @@
     <header class="header-card">
       <h1 class="brand"><span class="brand-icon">📢</span> My Memo</h1>
       <div class="header-right">
-        <nav class="language-switcher" aria-label="언어 선택">
-          <button type="button" class="lang-btn" data-lang="ko" aria-pressed="true">KO</button>
-          <span aria-hidden="true">/</span>
-          <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
-        </nav>
-        <span class="server-note" id="serverNote">관리자PC가 꺼져있으면 페이지는 쉽니다</span>
-        <a class="github-link" href="https://github.com/leemgs/mymemo/" target="_blank" rel="noopener" title="GitHub 저장소 열기" aria-label="GitHub 저장소">
+        <div class="lang-switch">
+          <button type="button" class="lang-btn" id="langKo">KO</button>
+          <button type="button" class="lang-btn" id="langEn">EN</button>
+        </div>
+        <span class="server-note" id="serverNote" data-i18n="server.note">관리자PC가 꺼져있으면 페이지는 쉽니다</span>
+        <a class="github-link" href="https://github.com/leemgs/mymemo/" target="_blank" rel="noopener" data-i18n-title="github.title" title="GitHub 저장소 열기" aria-label="GitHub 저장소">
           <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true" fill="currentColor">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
           </svg>
         </a>
-        <button class="btn-admin" id="adminBtn">⚙ 관리자 설정</button>
+        <button class="btn-admin" id="adminBtn" data-i18n="admin.btn">⚙ 관리자 설정</button>
       </div>
     </header>
 
@@ -54,7 +53,7 @@
     <div class="filter-bar" id="filterBar" hidden>
       <div class="search-box">
         <span class="search-icon" aria-hidden="true">🔍</span>
-        <input type="search" id="searchInput" placeholder="제목·내용·태그 검색" autocomplete="off" />
+        <input type="search" id="searchInput" data-i18n-ph="search.placeholder" placeholder="제목·내용·태그 검색" autocomplete="off" />
         <button type="button" class="search-clear" id="searchClear" hidden aria-label="검색 지우기">×</button>
       </div>
       <div class="tag-filter" id="tagFilter" hidden></div>
@@ -63,7 +62,7 @@
     <!-- Loading state -->
     <div class="loading-state" id="loadingState" hidden>
       <div class="spinner" aria-hidden="true"></div>
-      <p class="loading-text">GitHub에서 메모를 불러오는 중…</p>
+      <p class="loading-text" data-i18n="loading.text">GitHub에서 메모를 불러오는 중…</p>
       <p class="loading-timer"><span id="loadingSecs">0.0</span><span class="loading-unit">초</span></p>
     </div>
 
@@ -72,12 +71,12 @@
 
     <!-- Empty state -->
     <div class="empty-state" id="emptyState" hidden>
-      <p>아직 메모가 없습니다. 오른쪽 아래 <strong>+</strong> 버튼으로 첫 메모를 남겨보세요.</p>
+      <p data-i18n="empty.text">아직 메모가 없습니다. 오른쪽 아래 <strong>+</strong> 버튼으로 첫 메모를 남겨보세요.</p>
     </div>
 
     <!-- Load more (progressive rendering) -->
     <div class="load-more-wrap" id="loadMoreWrap" hidden>
-      <button type="button" class="btn-secondary" id="loadMoreBtn">더 보기</button>
+      <button type="button" class="btn-secondary" id="loadMoreBtn" data-i18n="loadmore.btn">더 보기</button>
       <p class="load-more-info" id="loadMoreInfo"></p>
     </div>
     <div id="scrollSentinel" aria-hidden="true"></div>
@@ -88,7 +87,7 @@
   </div>
 
   <!-- Floating add button -->
-  <button class="fab" id="fab" title="새 메모 작성">+</button>
+  <button class="fab" id="fab" data-i18n-title="fab.title" title="새 메모 작성">+</button>
 
   <!-- New memo modal -->
   <div class="modal-overlay" id="memoModal" hidden>
@@ -99,34 +98,34 @@
       </div>
       <form id="memoForm" class="modal-body">
         <label class="field">
-          <span class="field-label">제목</span>
-          <input type="text" id="memoTitle" name="title" placeholder="제목을 입력하세요 (선택)" />
+          <span class="field-label" data-i18n="memo.title.label">제목</span>
+          <input type="text" id="memoTitle" name="title" data-i18n-ph="memo.title.ph" placeholder="제목을 입력하세요 (선택)" />
         </label>
         <label class="field">
-          <span class="field-label">내용 <em>*</em></span>
-          <textarea id="memoContent" name="content" rows="8" placeholder="메모 내용을 입력하세요" required></textarea>
+          <span class="field-label"><span data-i18n="memo.content.label">내용</span> <em>*</em></span>
+          <textarea id="memoContent" name="content" rows="8" data-i18n-ph="memo.content.ph" placeholder="메모 내용을 입력하세요" required></textarea>
         </label>
         <label class="field">
-          <span class="field-label">태그</span>
-          <input type="text" id="memoTags" name="tags" placeholder="쉼표로 구분 (예: 반도체, 협약, 공지)" />
+          <span class="field-label" data-i18n="memo.tags.label">태그</span>
+          <input type="text" id="memoTags" name="tags" data-i18n-ph="memo.tags.ph" placeholder="쉼표로 구분 (예: 반도체, 협약, 공지)" />
         </label>
         <div class="field">
-          <span class="field-label">색상</span>
+          <span class="field-label" data-i18n="memo.color.label">색상</span>
           <div id="memoColorPicker" class="color-picker"></div>
-          <span class="field-hint">포스트잇 색을 고르세요. <b>자동</b>은 메모마다 색이 자동 배정됩니다.</span>
+          <span class="field-hint" data-i18n="memo.color.hint">포스트잇 색을 고르세요. <b>자동</b>은 메모마다 색이 자동 배정됩니다.</span>
         </div>
         <div class="field" id="existingAttachField" hidden>
-          <span class="field-label">기존 첨부파일</span>
+          <span class="field-label" data-i18n="memo.existattach.label">기존 첨부파일</span>
           <div id="existingAttachList" class="existing-attach"></div>
-          <span class="field-hint">체크를 해제하면 저장 시 해당 파일이 삭제됩니다.</span>
+          <span class="field-hint" data-i18n="memo.existattach.hint">체크를 해제하면 저장 시 해당 파일이 삭제됩니다.</span>
         </div>
         <label class="field">
-          <span class="field-label" id="fileFieldLabel">파일 첨부</span>
+          <span class="field-label" id="fileFieldLabel" data-i18n="memo.files.label">파일 첨부</span>
           <input type="file" id="memoFiles" name="files" multiple />
-          <span class="field-hint">여러 파일 선택 가능 · 파일당 최대 10MB</span>
+          <span class="field-hint" data-i18n="memo.files.hint">여러 파일 선택 가능 · 파일당 최대 10MB</span>
         </label>
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" id="cancelBtn">취소</button>
+          <button type="button" class="btn-secondary" id="cancelBtn" data-i18n="btn.cancel">취소</button>
           <button type="submit" class="btn-primary" id="saveBtn">저장 (Git 커밋)</button>
         </div>
       </form>
@@ -188,16 +187,16 @@
 
         <div class="admin-status" id="adminStatus"></div>
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" id="adminCheckBtn">연결 확인</button>
-          <button type="button" class="btn-primary" id="adminSaveBtn">저장</button>
+          <button type="button" class="btn-secondary" id="adminCheckBtn" data-i18n="admin.check.btn">연결 확인</button>
+          <button type="button" class="btn-primary" id="adminSaveBtn" data-i18n="admin.save.btn">저장</button>
         </div>
 
         <hr class="admin-divider" />
         <div class="field">
-          <span class="field-label">👀 익명 접근</span>
+          <span class="field-label" data-i18n="anon.label">👀 익명 접근</span>
           <label class="anon-row">
             <input type="checkbox" id="anonToggle" />
-            <span>익명 접근 (로그인 접근 암호 불필요) 허용</span>
+            <span data-i18n="anon.toggle">익명 접근 (로그인 접근 암호 불필요) 허용</span>
           </label>
           <span class="field-hint">
             켜면 <b>잠금화면 없이 누구나</b> 열람할 수 있습니다(저장·수정·삭제는 여전히 토큰이 필요).
@@ -205,15 +204,15 @@
             <b>배포 재빌드 후(수 분) 모든 방문자</b>에게 적용됩니다.
           </span>
           <div class="pw-status" id="anonStatus"></div>
-          <button type="button" class="btn-primary pw-change-btn" id="anonApplyBtn">적용 (Git 커밋)</button>
+          <button type="button" class="btn-primary pw-change-btn" id="anonApplyBtn" data-i18n="apply.btn">적용 (Git 커밋)</button>
         </div>
 
         <hr class="admin-divider" />
         <div class="field">
-          <span class="field-label">✏️ 익명 쓰기</span>
+          <span class="field-label" data-i18n="anonwrite.label">✏️ 익명 쓰기</span>
           <label class="anon-row">
             <input type="checkbox" id="anonWriteToggle" />
-            <span>익명 쓰기 (토큰 없이 저장·수정·삭제) 허용</span>
+            <span data-i18n="anonwrite.toggle">익명 쓰기 (토큰 없이 저장·수정·삭제) 허용</span>
           </label>
           <span class="field-hint">
             켜면 <b>토큰 없이 누구나</b> 메모를 저장·수정·삭제할 수 있습니다. 익명 접근과 함께 켜면 완전히 열린 메모장이 됩니다.
@@ -221,21 +220,21 @@
             <b>배포 재빌드 후(수 분) 모든 방문자</b>에게 적용됩니다.
           </span>
           <div class="pw-status" id="anonWriteStatus"></div>
-          <button type="button" class="btn-primary pw-change-btn" id="anonWriteApplyBtn">적용 (Git 커밋)</button>
+          <button type="button" class="btn-primary pw-change-btn" id="anonWriteApplyBtn" data-i18n="apply.btn">적용 (Git 커밋)</button>
         </div>
 
         <hr class="admin-divider" />
         <div class="field">
-          <span class="field-label">🔑 접근 암호 변경</span>
-          <input type="password" id="pwCurrent" class="pw-input" placeholder="현재 암호" autocomplete="off" />
-          <input type="password" id="pwNew" class="pw-input" placeholder="새 암호 (4자 이상)" autocomplete="new-password" />
-          <input type="password" id="pwNew2" class="pw-input" placeholder="새 암호 확인" autocomplete="new-password" />
+          <span class="field-label" data-i18n="pw.label">🔑 접근 암호 변경</span>
+          <input type="password" id="pwCurrent" class="pw-input" data-i18n-ph="pw.current.ph" placeholder="현재 암호" autocomplete="off" />
+          <input type="password" id="pwNew" class="pw-input" data-i18n-ph="pw.new.ph" placeholder="새 암호 (4자 이상)" autocomplete="new-password" />
+          <input type="password" id="pwNew2" class="pw-input" data-i18n-ph="pw.new2.ph" placeholder="새 암호 확인" autocomplete="new-password" />
           <span class="field-hint">
             새 암호의 <b>SHA-256 해시만</b> <code>docs/js/auth.js</code>에 커밋됩니다(평문은 저장하지 않음).
             <b>쓰기 토큰(또는 서버 연결)</b>이 필요하며, <b>배포 재빌드 후(수 분) 모든 기기</b>에 적용됩니다.
           </span>
           <div class="pw-status" id="pwStatus"></div>
-          <button type="button" class="btn-primary pw-change-btn" id="pwChangeBtn">암호 변경 (Git 커밋)</button>
+          <button type="button" class="btn-primary pw-change-btn" id="pwChangeBtn" data-i18n="pw.change.btn">암호 변경 (Git 커밋)</button>
         </div>
       </div>
     </div>
@@ -246,7 +245,7 @@
     <div class="busy-card">
       <div class="spinner" aria-hidden="true"></div>
       <p class="busy-text" id="busyText">처리 중…</p>
-      <p class="busy-sub">GitHub에 Git 커밋 중입니다. 잠시만 기다려 주세요.</p>
+      <p class="busy-sub" data-i18n="busy.sub">GitHub에 Git 커밋 중입니다. 잠시만 기다려 주세요.</p>
       <p class="busy-timer"><span id="busySecs">0.0</span><span class="loading-unit">초</span></p>
     </div>
   </div>
@@ -254,7 +253,6 @@
   <div class="toast" id="toast" hidden></div>
 
   <script src="config.js"></script>
-  <script src="js/i18n.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
 </body>
