@@ -151,6 +151,35 @@ body {
   align-items: center;
   gap: 18px;
 }
+.language-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.lang-btn {
+  border: 0;
+  padding: 4px 2px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.lang-btn:hover,
+.lang-btn.active {
+  color: var(--accent);
+}
+.lang-btn.active {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.lang-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
 .server-note {
   color: var(--text);
   font-weight: 700;
@@ -182,6 +211,22 @@ body {
   transition: background 0.15s, color 0.15s;
 }
 .github-link:hover { background: #e9edf3; color: #1b1f24; }
+
+.site-footer {
+  margin-top: 36px;
+  padding: 22px 10px 0;
+  border-top: 1px solid #d9dee7;
+  text-align: center;
+  font-size: 13px;
+}
+.site-footer a {
+  color: #667085;
+  text-decoration: none;
+}
+.site-footer a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
 
 /* Status banner */
 .status-banner {
@@ -265,6 +310,11 @@ body {
 }
 @media (max-width: 960px) { .memo-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px) { .memo-grid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) {
+  .header-right { width: 100%; gap: 12px; flex-wrap: wrap; }
+  .server-note { order: 3; width: 100%; font-size: 13px; }
+  .language-switcher { margin-left: auto; }
+}
 
 /* 포스트잇(스티키 노트) 카드 */
 .memo-card {
