@@ -1,6 +1,16 @@
 {
   "memos": [
     {
+      "id": "20260724162520-qa9x",
+      "title": "dd",
+      "snippet": "dddd",
+      "more": false,
+      "tags": [],
+      "color": "",
+      "attachments": [],
+      "createdAt": "2026-07-24T07:25:20.195Z"
+    },
+    {
       "id": "20260723212705-bxjr",
       "title": "github repo 작업 todo",
       "snippet": "truthprint: 홈페이지 접속 시의 가로 스크롤바가 안 보이는 디자인 구조로 만들기\n홈페이지 접속 시에 빨간색 네모 박스의 가로 스크롤바가 보이니까 조작해야 돼서 불편합니다. 재정비해줘.\n\nmemo: 익명쓰기 권한 기능 추가하기,\n변경전: 익명접근 권한\n변경후: 익명접근 + 익명쓰기 권한",
