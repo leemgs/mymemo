@@ -67,6 +67,9 @@
   var memoGrid = $("memoGrid");
   var emptyState = $("emptyState");
   var statusBanner = $("statusBanner");
+  function tr(ko, en) {
+    return window.mymemoI18n ? window.mymemoI18n.t(ko, en) : ko;
+  }
 
   function toast(msg, isErr) {
     var t = $("toast");
@@ -83,6 +86,12 @@
   function fmtDate(iso) {
     var d = new Date(iso);
     if (isNaN(d)) return "";
+    if (window.mymemoI18n && window.mymemoI18n.getLang() === "en") {
+      return new Intl.DateTimeFormat("en", {
+        year: "numeric", month: "short", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
+      }).format(d);
+    }
     var p = function (n) { return (n < 10 ? "0" : "") + n; };
     var h = d.getHours(), ampm = h < 12 ? "오전" : "오후", h12 = h % 12 || 12;
     return d.getFullYear() + ". " + p(d.getMonth() + 1) + ". " + p(d.getDate()) +
@@ -713,7 +722,10 @@
     });
   }
   function removeMemo(id) {
-    if (!confirm("이 메모를 삭제할까요? (Git에서도 삭제 커밋됩니다)")) return;
+    if (!confirm(tr(
+      "이 메모를 삭제할까요? (Git에서도 삭제 커밋됩니다)",
+      "Delete this memo? The deletion will also be committed to Git."
+    ))) return;
     showBusy("메모를 삭제하고 Git에 커밋하는 중…");
     store.remove(id)
       .then(function () {
