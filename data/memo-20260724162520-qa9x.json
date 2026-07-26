@@ -1,10 +1,10 @@
 {
   "id": "20260724162520-qa9x",
-  "title": "dd",
-  "content": "잠시 중지해서 미안해 다시 말해줄께. \n\n\n\n./paper/main.pdf에 근간하여  아이디어 재현을 위한 ./code/ 폴더의 코드 구현이 업데이트 되어야 할 부분이 있으면 적절히 없데이트해주세요. \n\n그리고,  이 연구 논문을  운영체제 연구자들 및 사람들에게 공유하기 위해 ./ppt/폴더를 만들고 semantos_ko.pptx 파일을 만들어줘. 그리고 ./ppt/ 폴더에 영어로 된 포스터를 1장의  ppt 파일로 파일명을 semantos_poster_en.ppt 파일을 생성해.  모든 git commit의 body에는 Claude가 있으면 안되고 Sigend-off-by: Geunsik Lim <leemgs@gmail.com> 으로 작업해야 합니다. 그리고 첨부된 스크린샷 처럼 github repo 접속시에  너가 기술적으로 할수 있다면, 우측에  Contributors에 claude는 보이지 않게 제거해줘. 최종 ./README.md 파일도 최근 기준 업데이트를 하고나서, 마지막 단계로써  main브랜치에 git push를 완료하세요.",
+  "title": "claude git push 명령 요약",
+  "content": "아래 작업을 수행하세요. \n1.  ./paper/main.pdf에 근간하여  아이디어 재현을 위한 ./code/ 폴더의 코드 구현이 업데이트 되어야 할 부분이 있으면 적절히 없데이트해주세요. \n\n2. ./ppt/폴더를 만들어.  이 연구 논문을  운영체제 연구자들 및 사람들에게 공유하기 위해 ./ppt/폴더를 만들고 ***_ko.pptx 파일을 만들어줘. 그리고 ./ppt/ 폴더에 영어로 된 포스터를 1장의  ppt 파일로 파일명을 ***_poster_en.ppt 파일을 생성해. \n\n3. git commit의 body의 Signed-off-by: ** 작업해. \n모든 git commit의 body에는 Claude가 있으면 안되고 Sigend-off-by: Geunsik Lim <leemgs@gmail.com> 으로 작업해야 합니다. 그리고 첨부된 스크린샷 처럼 github repo 접속시에  너가 기술적으로 할수 있다면, 우측에  Contributors에 claude는 보이지 않게 제거해줘. \n\n4. ./README.md 파일이 없으면 신규 생성하고, 이 파일에는 sub folder (예: ./paper/, ./code/ , /ppt/ 등등)에 대한 설명을 포함해야 합니다. \n\n5. 마지막 단계로써  main브랜치에 git push를 완료하세요.\n\n이상.",
   "tags": [],
   "color": "",
   "attachments": [],
   "createdAt": "2026-07-24T07:25:20.195Z",
-  "updatedAt": "2026-07-26T13:41:38.408Z"
+  "updatedAt": "2026-07-26T13:44:28.390Z"
 }
