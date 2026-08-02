@@ -421,32 +421,42 @@
     });
   }
 
+  // Latest commit sha + its tree sha in a SINGLE request (vs. GET ref + GET commit).
+  function ghBase() {
+    return ghApi("GET", "/branches/" + encodeURIComponent(cfg.branch))
+      .then(function (b) { return { commitSha: b.commit.sha, treeSha: b.commit.commit.tree.sha }; });
+  }
+
   // Create ONE commit containing all given file changes.
-  //   changes: [{ path, contentBase64 }]  (add/update)  or  { path, remove:true }
-  function commitFiles(message, changes) {
-    var latestSha, baseTree;
-    return ghApi("GET", "/git/ref/heads/" + encodeURIComponent(cfg.branch))
-      .then(function (ref) {
-        latestSha = ref.object.sha;
-        return ghApi("GET", "/git/commits/" + latestSha);
-      })
-      .then(function (commit) {
-        baseTree = commit.tree.sha;
-        // Create blobs for added/updated files (sequentially to keep it simple).
-        var tree = [];
-        var chain = Promise.resolve();
-        changes.forEach(function (c) {
-          chain = chain.then(function () {
-            if (c.remove) { tree.push({ path: c.path, mode: "100644", type: "blob", sha: null }); return; }
-            return ghApi("POST", "/git/blobs", { content: c.contentBase64, encoding: "base64" })
-              .then(function (blob) { tree.push({ path: c.path, mode: "100644", type: "blob", sha: blob.sha }); });
-          });
-        });
-        return chain.then(function () { return tree; });
-      })
-      .then(function (tree) { return ghApi("POST", "/git/trees", { base_tree: baseTree, tree: tree }); })
-      .then(function (t) { return ghApi("POST", "/git/commits", { message: message, tree: t.sha, parents: [latestSha] }); })
-      .then(function (c) { return ghApi("PATCH", "/git/refs/heads/" + encodeURIComponent(cfg.branch), { sha: c.sha }); });
+  //   changes: [{ path, content }]       add/update a TEXT file  (inline in tree, no blob call)
+  //            [{ path, contentBase64 }]  add/update a BINARY file (needs a blob call)
+  //            [{ path, remove:true }]    delete a file
+  //
+  // Speed: the base branch state and any binary blobs are fetched in PARALLEL,
+  // then a single tree → commit → ref chain runs. Text files are written inline
+  // (GitHub creates their blobs), so a typical text-only save is 4 round-trips
+  // (read ∥ → tree → commit → ref) instead of the previous 8. `base` may be a
+  // pre-fetched {commitSha, treeSha} (or a promise) so callers can overlap it
+  // with their own read (e.g. githubList) via Promise.all.
+  function commitFiles(message, changes, base) {
+    var baseP = base ? Promise.resolve(base) : ghBase();
+    // Only binary files need a separate blob; text goes inline. Run blobs in parallel.
+    var blobsP = Promise.all(changes.map(function (c) {
+      if (c.remove || c.contentBase64 == null) return null;
+      return ghApi("POST", "/git/blobs", { content: c.contentBase64, encoding: "base64" })
+        .then(function (blob) { return blob.sha; });
+    }));
+    return Promise.all([baseP, blobsP]).then(function (r) {
+      var b = r[0], shas = r[1];
+      var tree = changes.map(function (c, i) {
+        if (c.remove) return { path: c.path, mode: "100644", type: "blob", sha: null };
+        if (c.contentBase64 != null) return { path: c.path, mode: "100644", type: "blob", sha: shas[i] };
+        return { path: c.path, mode: "100644", type: "blob", content: c.content };
+      });
+      return ghApi("POST", "/git/trees", { base_tree: b.treeSha, tree: tree })
+        .then(function (t) { return ghApi("POST", "/git/commits", { message: message, tree: t.sha, parents: [b.commitSha] }); })
+        .then(function (c) { return ghApi("PATCH", "/git/refs/heads/" + encodeURIComponent(cfg.branch), { sha: c.sha }); });
+    });
   }
 
   function rawList() {
@@ -473,7 +483,9 @@
       });
   }
   function githubCreate(payload) {
-    return githubList().then(function (memos) {
+    // Read the current index and the base branch state concurrently.
+    return Promise.all([githubList(), ghBase()]).then(function (r) {
+      var memos = r[0], base = r[1];
       var id = newId(), attachments = [], changes = [];
       (payload.files || []).forEach(function (f, i) {
         var b64 = (f.dataUrl.split(",")[1]) || "";
@@ -484,27 +496,29 @@
       var memo = { id: id, title: payload.title || "", content: payload.content,
                    tags: payload.tags || [], color: payload.color || "",
                    attachments: attachments, createdAt: new Date().toISOString() };
-      changes.push({ path: cfg.dataDir + "/memo-" + id + ".json", contentBase64: b64encode(JSON.stringify(memo, null, 2)) });
+      changes.push({ path: cfg.dataDir + "/memo-" + id + ".json", content: JSON.stringify(memo, null, 2) });
       var newMemos = [toIndexEntry(memo)].concat(memos);
-      changes.push({ path: cfg.dataDir + "/index.json", contentBase64: b64encode(JSON.stringify({ memos: newMemos }, null, 2)) });
+      changes.push({ path: cfg.dataDir + "/index.json", content: JSON.stringify({ memos: newMemos }, null, 2) });
       var title = memo.title || memo.content.slice(0, 30).replace(/\s+/g, " ");
-      return commitFiles('memo: add "' + title + '" (' + id + ")", changes).then(function () { return memo; });
+      return commitFiles('memo: add "' + title + '" (' + id + ")", changes, base).then(function () { return memo; });
     });
   }
   function githubRemove(id) {
-    return githubList().then(function (memos) {
+    return Promise.all([githubList(), ghBase()]).then(function (r) {
+      var memos = r[0], base = r[1];
       var memo = memos.filter(function (m) { return m.id === id; })[0];
       var changes = [{ path: cfg.dataDir + "/memo-" + id + ".json", remove: true }];
       if (memo) (memo.attachments || []).forEach(function (a) {
         changes.push({ path: cfg.dataDir + "/attachments/" + a.stored, remove: true });
       });
       var newMemos = memos.filter(function (m) { return m.id !== id; });
-      changes.push({ path: cfg.dataDir + "/index.json", contentBase64: b64encode(JSON.stringify({ memos: newMemos }, null, 2)) });
-      return commitFiles("memo: remove " + id, changes);
+      changes.push({ path: cfg.dataDir + "/index.json", content: JSON.stringify({ memos: newMemos }, null, 2) });
+      return commitFiles("memo: remove " + id, changes, base);
     });
   }
   function githubUpdate(id, payload) {
-    return githubList().then(function (memos) {
+    return Promise.all([githubList(), ghBase()]).then(function (r) {
+      var memos = r[0], base = r[1];
       var idx = -1, existing = null;
       memos.forEach(function (m, i) { if (m.id === id) { existing = m; idx = i; } });
       if (!existing) throw new Error("수정할 메모를 찾을 수 없습니다");
@@ -534,12 +548,12 @@
         createdAt: existing.createdAt,
         updatedAt: new Date().toISOString()
       };
-      changes.push({ path: cfg.dataDir + "/memo-" + id + ".json", contentBase64: b64encode(JSON.stringify(memo, null, 2)) });
+      changes.push({ path: cfg.dataDir + "/memo-" + id + ".json", content: JSON.stringify(memo, null, 2) });
       var newMemos = memos.slice();
       newMemos[idx] = toIndexEntry(memo);
-      changes.push({ path: cfg.dataDir + "/index.json", contentBase64: b64encode(JSON.stringify({ memos: newMemos }, null, 2)) });
+      changes.push({ path: cfg.dataDir + "/index.json", content: JSON.stringify({ memos: newMemos }, null, 2) });
       var title = memo.title || memo.content.slice(0, 30).replace(/\s+/g, " ");
-      return commitFiles('memo: edit "' + title + '" (' + id + ")", changes).then(function () { return memo; });
+      return commitFiles('memo: edit "' + title + '" (' + id + ")", changes, base).then(function () { return memo; });
     });
   }
   // 개별 메모 전체 본문 로드(지연). contents API 우선, 실패 시 raw CDN 폴백.
@@ -556,42 +570,51 @@
   }
   // Commit a new access-password hash into docs/js/auth.js (global, all devices).
   function githubChangePassword(newHash) {
-    return ghApi("GET", "/contents/docs/js/auth.js?ref=" + encodeURIComponent(cfg.branch) + "&_=" + new Date().getTime())
-      .then(function (res) {
-        var src = b64decode(res.content);
-        if (!PASS_HASH_RE.test(src)) throw new Error("auth.js에서 PASS_HASH를 찾을 수 없습니다");
-        var updated = applyNewPassHash(src, newHash);
-        return commitFiles("chore: change access password", [
-          { path: "docs/js/auth.js", contentBase64: b64encode(updated) }
-        ]);
-      });
+    return Promise.all([
+      ghApi("GET", "/contents/docs/js/auth.js?ref=" + encodeURIComponent(cfg.branch) + "&_=" + new Date().getTime()),
+      ghBase()
+    ]).then(function (r) {
+      var res = r[0], base = r[1];
+      var src = b64decode(res.content);
+      if (!PASS_HASH_RE.test(src)) throw new Error("auth.js에서 PASS_HASH를 찾을 수 없습니다");
+      var updated = applyNewPassHash(src, newHash);
+      return commitFiles("chore: change access password", [
+        { path: "docs/js/auth.js", content: updated }
+      ], base);
+    });
   }
   // Toggle anonymous access by committing the ALLOW_ANON flag in docs/js/auth.js.
   var ALLOW_ANON_RE = /var ALLOW_ANON = (?:true|false);/;
   function githubSetAllowAnon(allow) {
-    return ghApi("GET", "/contents/docs/js/auth.js?ref=" + encodeURIComponent(cfg.branch) + "&_=" + new Date().getTime())
-      .then(function (res) {
-        var src = b64decode(res.content);
-        if (!ALLOW_ANON_RE.test(src)) throw new Error("auth.js에서 ALLOW_ANON을 찾을 수 없습니다");
-        var updated = src.replace(ALLOW_ANON_RE, "var ALLOW_ANON = " + (allow ? "true" : "false") + ";");
-        return commitFiles("chore: " + (allow ? "enable" : "disable") + " anonymous access", [
-          { path: "docs/js/auth.js", contentBase64: b64encode(updated) }
-        ]);
-      });
+    return Promise.all([
+      ghApi("GET", "/contents/docs/js/auth.js?ref=" + encodeURIComponent(cfg.branch) + "&_=" + new Date().getTime()),
+      ghBase()
+    ]).then(function (r) {
+      var res = r[0], base = r[1];
+      var src = b64decode(res.content);
+      if (!ALLOW_ANON_RE.test(src)) throw new Error("auth.js에서 ALLOW_ANON을 찾을 수 없습니다");
+      var updated = src.replace(ALLOW_ANON_RE, "var ALLOW_ANON = " + (allow ? "true" : "false") + ";");
+      return commitFiles("chore: " + (allow ? "enable" : "disable") + " anonymous access", [
+        { path: "docs/js/auth.js", content: updated }
+      ], base);
+    });
   }
 
   // Toggle anonymous write by committing the ALLOW_ANON_WRITE flag in docs/js/auth.js.
   var ALLOW_ANON_WRITE_RE = /var ALLOW_ANON_WRITE = (?:true|false);/;
   function githubSetAllowAnonWrite(allow) {
-    return ghApi("GET", "/contents/docs/js/auth.js?ref=" + encodeURIComponent(cfg.branch) + "&_=" + new Date().getTime())
-      .then(function (res) {
-        var src = b64decode(res.content);
-        if (!ALLOW_ANON_WRITE_RE.test(src)) throw new Error("auth.js에서 ALLOW_ANON_WRITE를 찾을 수 없습니다");
-        var updated = src.replace(ALLOW_ANON_WRITE_RE, "var ALLOW_ANON_WRITE = " + (allow ? "true" : "false") + ";");
-        return commitFiles("chore: " + (allow ? "enable" : "disable") + " anonymous write", [
-          { path: "docs/js/auth.js", contentBase64: b64encode(updated) }
-        ]);
-      });
+    return Promise.all([
+      ghApi("GET", "/contents/docs/js/auth.js?ref=" + encodeURIComponent(cfg.branch) + "&_=" + new Date().getTime()),
+      ghBase()
+    ]).then(function (r) {
+      var res = r[0], base = r[1];
+      var src = b64decode(res.content);
+      if (!ALLOW_ANON_WRITE_RE.test(src)) throw new Error("auth.js에서 ALLOW_ANON_WRITE를 찾을 수 없습니다");
+      var updated = src.replace(ALLOW_ANON_WRITE_RE, "var ALLOW_ANON_WRITE = " + (allow ? "true" : "false") + ";");
+      return commitFiles("chore: " + (allow ? "enable" : "disable") + " anonymous write", [
+        { path: "docs/js/auth.js", content: updated }
+      ], base);
+    });
   }
 
   // ---- local server (optional self-host) ----
