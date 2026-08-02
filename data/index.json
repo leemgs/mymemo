@@ -3,12 +3,13 @@
     {
       "id": "20260802092542-ltbu",
       "title": "Prompt: git commit 일괄처리",
-      "snippet": "Prompt: git commit 일괄처리\n\n\n모든 커밋 committer/author = Geunsik Lim leemgs@gmail.com, Signed-off-by 포함, 작업 트리 clean",
+      "snippet": "Prompt: git commit 일괄처리 방법입니다.\n\n\n모든 커밋 committer/author = Geunsik Lim leemgs@gmail.com, Signed-off-by 포함, 작업 트리 clean",
       "more": false,
       "tags": [],
       "color": "",
       "attachments": [],
-      "createdAt": "2026-08-02T00:25:42.033Z"
+      "createdAt": "2026-08-02T00:25:42.033Z",
+      "updatedAt": "2026-08-02T13:21:51.596Z"
     },
     {
       "id": "20260724162616-tj0o",
