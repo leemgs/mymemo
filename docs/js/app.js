@@ -294,6 +294,7 @@
 
   var cfg = loadCfg();
   var currentMemos = [];
+  var memosLoaded = false;
   var readOnly = true;
   var serverUp = false;
   var tokenInvalid = false; // set when GitHub rejects the token (401) during read
@@ -404,6 +405,30 @@
     if (cfg.token) h["Authorization"] = "Bearer " + cfg.token;
     return h;
   }
+
+  function ghGraphql(query, variables) {
+    var opt = {
+      method: "POST",
+      headers: ghHeaders(),
+      cache: "no-store",
+      body: JSON.stringify({ query: query, variables: variables })
+    };
+    opt.headers["Content-Type"] = "application/json";
+    return fetch("https://api.github.com/graphql", opt).then(function (r) {
+      return r.json().then(function (data) {
+        if (!r.ok || (data.errors && data.errors.length)) {
+          var msg = data && data.errors && data.errors[0] && data.errors[0].message;
+          var err = new Error(msg || ("HTTP " + r.status)); err.status = r.status; throw err;
+        }
+        return data.data;
+      });
+    });
+  }
+
+  function utf8ToBase64(value) {
+    return btoa(unescape(encodeURIComponent(value)));
+  }
+
   function ghApi(method, path, body) {
     var opt = { method: method, headers: ghHeaders(), cache: "no-store" };
     if (body) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
@@ -428,17 +453,14 @@
   }
 
   // Create ONE commit containing all given file changes.
-  //   changes: [{ path, content }]       add/update a TEXT file  (inline in tree, no blob call)
-  //            [{ path, contentBase64 }]  add/update a BINARY file (needs a blob call)
+  //   changes: [{ path, content }]       add/update a TEXT file
+  //            [{ path, contentBase64 }]  add/update a BINARY file
   //            [{ path, remove:true }]    delete a file
   //
-  // Speed: the base branch state and any binary blobs are fetched in PARALLEL,
-  // then a single tree → commit → ref chain runs. Text files are written inline
-  // (GitHub creates their blobs), so a typical text-only save is 4 round-trips
-  // (read ∥ → tree → commit → ref) instead of the previous 8. `base` may be a
-  // pre-fetched {commitSha, treeSha} (or a promise) so callers can overlap it
-  // with their own read (e.g. githubList) via Promise.all.
-  function commitFiles(message, changes, base) {
+  // Fast path: use GraphQL createCommitOnBranch so a normal save/update is
+  // branch HEAD lookup + one atomic commit mutation. If GraphQL is unavailable,
+  // fall back to the REST Git Data API implementation below.
+  function commitFilesRest(message, changes, base) {
     var baseP = base ? Promise.resolve(base) : ghBase();
     // Only binary files need a separate blob; text goes inline. Run blobs in parallel.
     var blobsP = Promise.all(changes.map(function (c) {
@@ -456,6 +478,30 @@
       return ghApi("POST", "/git/trees", { base_tree: b.treeSha, tree: tree })
         .then(function (t) { return ghApi("POST", "/git/commits", { message: message, tree: t.sha, parents: [b.commitSha] }); })
         .then(function (c) { return ghApi("PATCH", "/git/refs/heads/" + encodeURIComponent(cfg.branch), { sha: c.sha }); });
+    });
+  }
+
+  function commitFilesGraphql(message, changes, base) {
+    var mutation = "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { oid } } }";
+    return Promise.resolve(base || ghBase()).then(function (b) {
+      var additions = [], deletions = [];
+      changes.forEach(function (c) {
+        if (c.remove) deletions.push({ path: c.path });
+        else additions.push({ path: c.path, contents: c.contentBase64 != null ? c.contentBase64 : utf8ToBase64(c.content || "") });
+      });
+      return ghGraphql(mutation, { input: {
+        branch: { repositoryNameWithOwner: cfg.owner + "/" + cfg.repo, branchName: cfg.branch },
+        message: { headline: message },
+        expectedHeadOid: b.commitSha,
+        fileChanges: { additions: additions, deletions: deletions }
+      } });
+    });
+  }
+
+  function commitFiles(message, changes, base) {
+    return commitFilesGraphql(message, changes, base).catch(function (e) {
+      console.warn("GraphQL commit failed; falling back to REST Git Data API", e);
+      return commitFilesRest(message, changes, base);
     });
   }
 
@@ -482,9 +528,17 @@
         throw e;
       });
   }
+  function memoIndexForWrite() {
+    // Save/update/delete can use the already loaded index instead of re-reading
+    // index.json before every commit. The commit itself remains protected by
+    // expectedHeadOid, so GitHub rejects stale writes instead of overwriting HEAD.
+    if (memosLoaded) return Promise.resolve(currentMemos.slice());
+    return githubList();
+  }
+
   function githubCreate(payload) {
     // Read the current index and the base branch state concurrently.
-    return Promise.all([githubList(), ghBase()]).then(function (r) {
+    return Promise.all([memoIndexForWrite(), ghBase()]).then(function (r) {
       var memos = r[0], base = r[1];
       var id = newId(), attachments = [], changes = [];
       (payload.files || []).forEach(function (f, i) {
@@ -504,7 +558,7 @@
     });
   }
   function githubRemove(id) {
-    return Promise.all([githubList(), ghBase()]).then(function (r) {
+    return Promise.all([memoIndexForWrite(), ghBase()]).then(function (r) {
       var memos = r[0], base = r[1];
       var memo = memos.filter(function (m) { return m.id === id; })[0];
       var changes = [{ path: cfg.dataDir + "/memo-" + id + ".json", remove: true }];
@@ -517,7 +571,7 @@
     });
   }
   function githubUpdate(id, payload) {
-    return Promise.all([githubList(), ghBase()]).then(function (r) {
+    return Promise.all([memoIndexForWrite(), ghBase()]).then(function (r) {
       var memos = r[0], base = r[1];
       var idx = -1, existing = null;
       memos.forEach(function (m, i) { if (m.id === id) { existing = m; idx = i; } });
@@ -957,6 +1011,7 @@
     return store.list().then(function (memos) {
       hideLoading();
       currentMemos = memos;
+      memosLoaded = true;
       readOnly = !store.canWrite();
       updateBanner();
       refreshView();
