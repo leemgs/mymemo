@@ -400,6 +400,8 @@ body {
 .memo-web-link {
   color: #175fc2;
   font-weight: 600;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
