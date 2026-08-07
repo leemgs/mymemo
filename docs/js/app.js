@@ -298,6 +298,8 @@
   var readOnly = true;
   var serverUp = false;
   var tokenInvalid = false; // set when GitHub rejects the token (401) during read
+  var githubHead = null;
+  var githubHeadPromise = null;
 
   // ---- DOM helpers ----
   var $ = function (id) { return document.getElementById(id); };
@@ -425,10 +427,6 @@
     });
   }
 
-  function utf8ToBase64(value) {
-    return btoa(unescape(encodeURIComponent(value)));
-  }
-
   function ghApi(method, path, body) {
     var opt = { method: method, headers: ghHeaders(), cache: "no-store" };
     if (body) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
@@ -449,7 +447,22 @@
   // Latest commit sha + its tree sha in a SINGLE request (vs. GET ref + GET commit).
   function ghBase() {
     return ghApi("GET", "/branches/" + encodeURIComponent(cfg.branch))
-      .then(function (b) { return { commitSha: b.commit.sha, treeSha: b.commit.commit.tree.sha }; });
+      .then(function (b) {
+        githubHead = { commitSha: b.commit.sha, treeSha: b.commit.commit.tree.sha };
+        return githubHead;
+      });
+  }
+
+  // used-notifier keeps the loaded file SHA and sends only one Contents API PUT
+  // when Save is clicked. Mymemo changes multiple files, so it uses the equivalent
+  // multi-file GraphQL mutation and keeps the branch HEAD warm ahead of the click.
+  function warmGithubHead(force) {
+    if (force) { githubHead = null; githubHeadPromise = null; }
+    if (githubHead) return Promise.resolve(githubHead);
+    if (!githubHeadPromise) {
+      githubHeadPromise = ghBase().finally(function () { githubHeadPromise = null; });
+    }
+    return githubHeadPromise;
   }
 
   // Create ONE commit containing all given file changes.
@@ -487,21 +500,34 @@
       var additions = [], deletions = [];
       changes.forEach(function (c) {
         if (c.remove) deletions.push({ path: c.path });
-        else additions.push({ path: c.path, contents: c.contentBase64 != null ? c.contentBase64 : utf8ToBase64(c.content || "") });
+        else additions.push({ path: c.path, contents: c.contentBase64 != null ? c.contentBase64 : b64encode(c.content || "") });
       });
       return ghGraphql(mutation, { input: {
         branch: { repositoryNameWithOwner: cfg.owner + "/" + cfg.repo, branchName: cfg.branch },
         message: { headline: message },
         expectedHeadOid: b.commitSha,
         fileChanges: { additions: additions, deletions: deletions }
-      } });
+      } }).then(function (data) {
+        // The returned commit is the expected HEAD for the next save. Keeping it
+        // eliminates the branch lookup from consecutive save/update/delete clicks.
+        githubHead = { commitSha: data.createCommitOnBranch.commit.oid, treeSha: null };
+        return data;
+      });
     });
   }
 
   function commitFiles(message, changes, base) {
     return commitFilesGraphql(message, changes, base).catch(function (e) {
       console.warn("GraphQL commit failed; falling back to REST Git Data API", e);
-      return commitFilesRest(message, changes, base);
+      // Do not reuse a possibly stale expected HEAD after a GraphQL conflict.
+      return warmGithubHead(true).then(function (freshBase) {
+        return commitFilesRest(message, changes, freshBase).then(function (ref) {
+          if (ref && ref.object && ref.object.sha) {
+            githubHead = { commitSha: ref.object.sha, treeSha: null };
+          }
+          return ref;
+        });
+      });
     });
   }
 
@@ -538,7 +564,7 @@
 
   function githubCreate(payload) {
     // Read the current index and the base branch state concurrently.
-    return Promise.all([memoIndexForWrite(), ghBase()]).then(function (r) {
+    return Promise.all([memoIndexForWrite(), warmGithubHead()]).then(function (r) {
       var memos = r[0], base = r[1];
       var id = newId(), attachments = [], changes = [];
       (payload.files || []).forEach(function (f, i) {
@@ -558,7 +584,7 @@
     });
   }
   function githubRemove(id) {
-    return Promise.all([memoIndexForWrite(), ghBase()]).then(function (r) {
+    return Promise.all([memoIndexForWrite(), warmGithubHead()]).then(function (r) {
       var memos = r[0], base = r[1];
       var memo = memos.filter(function (m) { return m.id === id; })[0];
       var changes = [{ path: cfg.dataDir + "/memo-" + id + ".json", remove: true }];
@@ -571,7 +597,7 @@
     });
   }
   function githubUpdate(id, payload) {
-    return Promise.all([memoIndexForWrite(), ghBase()]).then(function (r) {
+    return Promise.all([memoIndexForWrite(), warmGithubHead()]).then(function (r) {
       var memos = r[0], base = r[1];
       var idx = -1, existing = null;
       memos.forEach(function (m, i) { if (m.id === id) { existing = m; idx = i; } });
@@ -1008,6 +1034,9 @@
   function refresh() {
     tokenInvalid = false;
     showLoading();
+    // Start the HEAD request with page loading rather than after the user clicks
+    // Save. It deliberately does not delay rendering if GitHub is slow.
+    if (cfg.mode === "github" && cfg.token) warmGithubHead(true).catch(function () {});
     return store.list().then(function (memos) {
       hideLoading();
       currentMemos = memos;
