@@ -318,6 +318,29 @@
     return String(s == null ? "" : s)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
+  function escAttr(s) {
+    return esc(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  // Escape memo text first, then turn only explicit HTTP(S) URLs into links.
+  // Sentence punctuation is kept outside the anchor so copied/displayed prose
+  // remains natural while the href always uses an allowed web protocol.
+  function linkifyMemoText(value) {
+    var text = String(value == null ? "" : value);
+    var urlRe = /https?:\/\/[^\s<>"']+/gi;
+    var html = "", last = 0, match;
+    while ((match = urlRe.exec(text)) !== null) {
+      var url = match[0], suffix = "";
+      while (/[.,!?;:)}\]]$/.test(url)) {
+        suffix = url.slice(-1) + suffix;
+        url = url.slice(0, -1);
+      }
+      html += esc(text.slice(last, match.index));
+      html += '<a class="memo-web-link" href="' + escAttr(url) +
+        '" target="_blank" rel="noopener noreferrer">' + esc(url) + "</a>" + esc(suffix);
+      last = match.index + match[0].length;
+    }
+    return html + esc(text.slice(last));
+  }
   function fmtDate(iso) {
     var d = new Date(iso);
     if (isNaN(d)) return "";
@@ -929,7 +952,7 @@
     var html = "";
     if (m.title) html += '<h3 class="memo-title">' + esc(m.title) + "</h3>";
     var body = (m.content != null) ? m.content : (m.snippet || "");
-    html += '<div class="memo-content">' + esc(body) +
+    html += '<div class="memo-content">' + linkifyMemoText(body) +
       (m.more ? '… <button class="more-btn" data-act="more">' + T("card.more") + '</button>' : "") + "</div>";
     if (m.tags && m.tags.length) {
       html += '<div class="memo-tags">' + m.tags.map(function (t) {

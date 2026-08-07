@@ -397,6 +397,19 @@ body {
   max-height: 260px;
   margin-bottom: 12px;
 }
+.memo-web-link {
+  color: #175fc2;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.memo-web-link:hover { color: #0b438f; }
+.memo-web-link:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .more-btn {
   background: none;
   border: none;
