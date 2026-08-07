@@ -380,9 +380,15 @@ body {
 .sticky-5 { --paper: #e3d6ff; }  /* purple */
 .sticky-6 { --paper: #c7f2e9; }  /* mint   */
 .memo-title {
+  background: rgba(43, 52, 66, 0.10);
+  background: color-mix(in srgb, var(--paper, #fff7b0) 84%, #2b3442 16%);
+  border-left: 4px solid rgba(43, 52, 66, 0.30);
+  border-radius: 4px;
+  color: #202938;
   font-size: 16px;
   font-weight: 700;
-  margin: 0 0 10px;
+  margin: -3px -5px 14px;
+  padding: 9px 10px;
   line-height: 1.4;
   word-break: break-word;
 }
