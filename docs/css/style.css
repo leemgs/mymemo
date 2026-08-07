@@ -501,22 +501,36 @@ body {
   color: rgba(0, 0, 0, 0.5);
   font-size: 13px;
 }
-.memo-actions { display: flex; gap: 8px; }
+.memo-actions { display: flex; flex: 0 0 auto; gap: 6px; }
 .icon-btn {
+  width: 38px;
+  height: 38px;
   background: var(--dark-btn);
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 0;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.12s;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
 }
-.icon-btn:hover { background: var(--dark-btn-hover); }
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.icon-btn:hover { background: var(--dark-btn-hover); transform: translateY(-1px); }
+.icon-btn[data-act="del"]:hover { background: var(--danger); }
+.icon-btn:focus-visible {
+  outline: 3px solid rgba(47, 128, 237, 0.4);
+  outline-offset: 2px;
+}
 
 /* Loading state */
 .loading-state {

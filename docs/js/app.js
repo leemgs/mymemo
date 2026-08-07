@@ -59,7 +59,7 @@
       "pw.change.btn": "암호 변경 (Git 커밋)",
       "busy.sub": "GitHub에 Git 커밋 중입니다. 잠시만 기다려 주세요.",
       "card.more": "더 읽기",
-      "card.copy": "⧉ 복사",
+      "card.copy": "복사",
       "card.edit": "수정",
       "card.del": "삭제",
       "card.modified": "(수정됨)",
@@ -157,7 +157,7 @@
       "pw.change.btn": "Change Password (Git commit)",
       "busy.sub": "Committing to GitHub. Please wait.",
       "card.more": "Read more",
-      "card.copy": "⧉ Copy",
+      "card.copy": "Copy",
       "card.edit": "Edit",
       "card.del": "Delete",
       "card.modified": "(edited)",
@@ -314,6 +314,17 @@
   }
   function escAttr(s) {
     return esc(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function actionIcon(action) {
+    var paths = {
+      copy: '<rect x="9" y="9" width="11" height="11" rx="2"></rect>' +
+        '<path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"></path>',
+      edit: '<path d="M12 20h9"></path>' +
+        '<path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"></path>',
+      del: '<path d="M3 6h18"></path><path d="M8 6V4h8v2"></path>' +
+        '<path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v5M14 11v5"></path>'
+    };
+    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + paths[action] + "</svg>";
   }
   // Escape memo text first, then turn only explicit HTTP(S) URLs into links.
   // Sentence punctuation is kept outside the anchor so copied/displayed prose
@@ -951,11 +962,17 @@
       }).join("") + "</div>";
     }
     var dateText = fmtDate(m.createdAt) + (m.updatedAt ? " " + T("card.modified") : "");
+    var copyLabel = escAttr(T("card.copy"));
+    var editLabel = escAttr(T("card.edit"));
+    var delLabel = escAttr(T("card.del"));
     html += '<div class="memo-footer"><span class="memo-date">' + esc(dateText) + "</span>" +
-      '<span class="memo-actions"><button class="icon-btn" data-act="copy">' + T("card.copy") + '</button>' +
+      '<span class="memo-actions"><button type="button" class="icon-btn" data-act="copy" aria-label="' +
+      copyLabel + '" title="' + copyLabel + '">' + actionIcon("copy") + '</button>' +
       (readOnly ? "" :
-        '<button class="icon-btn" data-act="edit">' + T("card.edit") + '</button>' +
-        '<button class="icon-btn" data-act="del">' + T("card.del") + '</button>') + "</span></div>";
+        '<button type="button" class="icon-btn" data-act="edit" aria-label="' + editLabel + '" title="' +
+        editLabel + '">' + actionIcon("edit") + '</button>' +
+        '<button type="button" class="icon-btn" data-act="del" aria-label="' + delLabel + '" title="' +
+        delLabel + '">' + actionIcon("del") + '</button>') + "</span></div>";
     el.innerHTML = html;
 
     var moreBtn = el.querySelector('[data-act="more"]');
