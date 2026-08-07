@@ -8,7 +8,6 @@
     "입장하기": "Enter",
     "📢 모두의 메모 · 인가된 사용자만 접근하세요": "📢 Shared memos · Authorized users only",
     "암호가 올바르지 않습니다": "The password is incorrect",
-    "관리자PC가 꺼져있으면 페이지는 쉽니다": "The page may be unavailable when the admin PC is offline",
     "⚙ 관리자 설정": "⚙ Admin settings",
     "GitHub에서 메모를 불러오는 중…": "Loading memos from GitHub…",
     "초": "s",

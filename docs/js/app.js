@@ -20,7 +20,6 @@
   var currentLang = localStorage.getItem(LANG_KEY) || "ko";
   var I18N = {
     ko: {
-      "server.note": "관리자PC가 꺼져있으면 페이지는 쉽니다",
       "admin.btn": "⚙ 관리자 설정",
       "github.title": "GitHub 저장소 열기",
       "lock.sub": "접근하려면 암호를 입력하세요",
@@ -121,7 +120,6 @@
       "perpage.suffix": "개 표시"
     },
     en: {
-      "server.note": "The page may be unavailable when the admin PC is offline",
       "admin.btn": "⚙ Admin Settings",
       "github.title": "Open GitHub repository",
       "lock.sub": "Enter password to access",
