@@ -926,7 +926,6 @@
     { key: "purple", hex: "#e3d6ff", label: "퍼플" },
     { key: "mint",   hex: "#c7f2e9", label: "민트" }
   ];
-  var STICKY_ROT = [-1.5, 1.1, -0.7, 1.4, -1.1, 0.6, -0.4];
   function stickyIndex(id) {
     var s = String(id || ""), h = 0;
     for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
@@ -939,7 +938,6 @@
   function card(m) {
     var el = document.createElement("article");
     var hashIdx = stickyIndex(m.id);
-    el.style.setProperty("--rot", STICKY_ROT[hashIdx] + "deg");
     var colorIdx = colorKeyToIndex(m.color);
     if (colorIdx >= 0) {
       el.className = "memo-card";
