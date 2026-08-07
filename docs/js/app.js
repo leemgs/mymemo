@@ -63,8 +63,6 @@
       "card.edit": "수정",
       "card.del": "삭제",
       "card.modified": "(수정됨)",
-      "card.am": "오전",
-      "card.pm": "오후",
       "modal.new": "새 메모 작성",
       "modal.edit": "메모 수정",
       "save.btn": "저장 (Git 커밋)",
@@ -163,8 +161,6 @@
       "card.edit": "Edit",
       "card.del": "Delete",
       "card.modified": "(edited)",
-      "card.am": "AM",
-      "card.pm": "PM",
       "modal.new": "New Memo",
       "modal.edit": "Edit Memo",
       "save.btn": "Save (Git commit)",
@@ -342,16 +338,9 @@
   function fmtDate(iso) {
     var d = new Date(iso);
     if (isNaN(d)) return "";
-    if (currentLang === "en") {
-      return new Intl.DateTimeFormat("en", {
-        year: "numeric", month: "short", day: "2-digit",
-        hour: "2-digit", minute: "2-digit", second: "2-digit"
-      }).format(d);
-    }
     var p = function (n) { return (n < 10 ? "0" : "") + n; };
-    var h = d.getHours(), ampm = h < 12 ? T("card.am") : T("card.pm"), h12 = h % 12 || 12;
-    return d.getFullYear() + ". " + p(d.getMonth() + 1) + ". " + p(d.getDate()) +
-      ". " + ampm + " " + p(h12) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) +
+      " " + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
   }
   function humanSize(b) {
     if (!b) return "";
