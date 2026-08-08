@@ -1,6 +1,16 @@
 {
   "memos": [
     {
+      "id": "20260808130426-bxn1",
+      "title": "ccusage 설치방법",
+      "snippet": "ccusage reads local usage data from coding agent CLIs and turns it into daily, weekly, monthly, and session reports.\nhttps://github.com/ccusage/ccusage\n\n\nA desktop viewer for the c",
+      "more": true,
+      "tags": [],
+      "color": "",
+      "attachments": [],
+      "createdAt": "2026-08-08T04:04:26.548Z"
+    },
+    {
       "id": "20260802092542-ltbu",
       "title": "Prompt: git commit 일괄처리 ..@@",
       "snippet": "Prompt: git commit 일괄처리 방법입니다...\n\n\n## 모든 커밋 \ncommitter/author = Geunsik Lim\nleemgs@gmail.com, \nSigned-off-by 포함,\n 작업 트리 clean",
