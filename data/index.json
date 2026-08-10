@@ -1,6 +1,16 @@
 {
   "memos": [
     {
+      "id": "20260810184805-rkpy",
+      "title": "333",
+      "snippet": "이미지의 주요 텍스트는 다음과 같습니다.\n\n결국 잘되는 사람들의 10가지 공통점\n\n1. 화려한 말보다 묵묵한 행동으로 증명한다.\n\n\n2. 실패해도 자신을 포기하지 않는다.\n\n\n3. 문제가 생겼을 때 남 탓부터 하지 않는다.\n\n\n4. 사소한 호의에도 감사할 줄 안다.\n\n\n5. 감정이 상해도 함부로 말하지 않는다.\n\n\n6. ",
+      "more": true,
+      "tags": [],
+      "color": "",
+      "attachments": [],
+      "createdAt": "2026-08-10T09:48:05.093Z"
+    },
+    {
       "id": "20260808130426-bxn1",
       "title": "ccusage 설치방법",
       "snippet": "ccusage reads local usage data from coding agent CLIs and turns it into daily, weekly, monthly, and session reports.\nhttps://github.com/ccusage/ccusage\n\n\nA desktop viewer for the c",
