@@ -3,7 +3,8 @@
   "title": "ccusage 설치방법",
   "content": "ccusage reads local usage data from coding agent CLIs and turns it into daily, weekly, monthly, and session reports.\nhttps://github.com/ccusage/ccusage\n\n\nA desktop viewer for the ccusage CLI. It gives the same rich analytics in a native window – charts, live session monitor, navigation – using the JSON output of the command-line tool.\n\nhttps://github.com/EthanBarlo/ccusage-app/releases/tag/v1.0.1\nccusage_1.0.1_amd64.deb\nCcusage-1.0.1.Setup.exe",
   "tags": [],
-  "color": "",
+  "color": "purple",
   "attachments": [],
-  "createdAt": "2026-08-08T04:04:26.548Z"
+  "createdAt": "2026-08-08T04:04:26.548Z",
+  "updatedAt": "2026-08-10T09:49:31.865Z"
 }

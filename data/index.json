@@ -3,8 +3,7 @@
     {
       "id": "20260810184805-rkpy",
       "title": "결국 잘되는 사람들의 10가지 공통점",
-      "snippet": "1. 화려한 말보다 묵묵한 행동으로 증명한다.\n2. 실패해도 자신을 포기하지 않는다.\n3. 문제가 생겼을 때 남 탓부터 하지 않는다.\n4. 사소한 호의에도 감사할 줄 안다.\n5. 감정이 상해도 함부로 말하지 않는다.\n6. 실수했을 때 변명보다 사과를 먼저 한다.\n7. 가까운 사람일수록 더 소중하게 대한다.\n8. 당장의 이",
-      "more": true,
+      "content": "1. 화려한 말보다 묵묵한 행동으로 증명한다.\n2. 실패해도 자신을 포기하지 않는다.\n3. 문제가 생겼을 때 남 탓부터 하지 않는다.\n4. 사소한 호의에도 감사할 줄 안다.\n5. 감정이 상해도 함부로 말하지 않는다.\n6. 실수했을 때 변명보다 사과를 먼저 한다.\n7. 가까운 사람일수록 더 소중하게 대한다.\n8. 당장의 이익보다 오래갈 신뢰를 선택한다.\n9. 타인의 성공을 시기하지 않고 진심으로 축하한다.\n10. 현실에 안주하지 않고 꾸준히 배우고 성장한다.",
       "tags": [],
       "color": "",
       "attachments": [],
@@ -17,9 +16,10 @@
       "snippet": "ccusage reads local usage data from coding agent CLIs and turns it into daily, weekly, monthly, and session reports.\nhttps://github.com/ccusage/ccusage\n\n\nA desktop viewer for the c",
       "more": true,
       "tags": [],
-      "color": "",
+      "color": "purple",
       "attachments": [],
-      "createdAt": "2026-08-08T04:04:26.548Z"
+      "createdAt": "2026-08-08T04:04:26.548Z",
+      "updatedAt": "2026-08-10T09:49:31.865Z"
     },
     {
       "id": "20260802092542-ltbu",
