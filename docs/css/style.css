@@ -13,6 +13,7 @@
   --shadow: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.06);
   --shadow-lg: 0 10px 30px rgba(16, 24, 40, 0.18);
   --danger: #e05252;
+  --font-ui: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -111,10 +112,18 @@ body.locked { overflow: hidden; }
 
 body {
   margin: 0;
-  font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-ui);
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Form controls do not consistently inherit the page font across browsers. */
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-ui);
 }
 
 .container {
