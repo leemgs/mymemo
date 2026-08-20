@@ -3,8 +3,7 @@
     {
       "id": "20260821052505-evwe",
       "title": "논문 prompt (2026-08-21)",
-      "snippet": "연구 논문을 이제 저널에 제출하려고 합니다. 제출전에 혹시 accept 이 되기 위해 필요한 추가 내용 또는  논문의 내용들 중에  해당 저널 리뷰어들의 지적사항이 될 소지가 있거나 아직 미흡한 문장들이 있으면 모두 작업을 clean허게  완료하세요. 완료후 main branch에 git push로 병합 완료하세요.",
-      "more": false,
+      "content": "연구 논문을 이제 저널에 제출하려고 합니다. 제출전에 혹시 accept 이 되기 위해 필요한 추가 내용 또는  논문의 내용들 중에  해당 저널 리뷰어들의 지적사항이 될 소지가 있거나 아직 미흡한 문장들이 있으면 모두 작업을 clean허게  완료하세요. 완료후 main branch에 git push로 병합 완료하세요.",
       "tags": [],
       "color": "",
       "attachments": [],
@@ -73,17 +72,6 @@
       "color": "",
       "attachments": [],
       "createdAt": "2026-07-23T12:27:05.995Z"
-    },
-    {
-      "id": "20260703091815-0bo6",
-      "title": "새로운 메모 작성시 리프레쉬 속도 테스트",
-      "snippet": "wow.. it is cleaned. \nquick new emmo refresh ( done)",
-      "more": false,
-      "tags": [],
-      "color": "",
-      "attachments": [],
-      "createdAt": "2026-07-03T00:18:15.750Z",
-      "updatedAt": "2026-07-04T10:32:29.674Z"
     },
     {
       "id": "20260703083531-hqfx",
