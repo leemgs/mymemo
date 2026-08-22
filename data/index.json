@@ -34,14 +34,14 @@
     },
     {
       "id": "20260802092542-ltbu",
-      "title": "Prompt: git commit 일괄처리 ..@@",
-      "snippet": "Prompt: git commit 일괄처리 방법입니다...\n\n\n## 모든 커밋 \ncommitter/author = Geunsik Lim\nleemgs@gmail.com, \nSigned-off-by 포함,\n 작업 트리 clean",
-      "more": false,
+      "title": "Prompt: git commit의 제출자/signed-off-by를 Geunsik Lim으로 일괄처리",
+      "snippet": "Prompt: git commit 일괄처리 방법입니다...\n\n\n## 모든 커밋 \ncommitter/author = Geunsik Lim\nleemgs@gmail.com, \nSigned-off-by 포함,\n 작업 트리 clean\n\n---\n\n\n\n\n\n모든 git commit들의 작성자/git body 내용에  claude가 아닌",
+      "more": true,
       "tags": [],
       "color": "",
       "attachments": [],
       "createdAt": "2026-08-02T00:25:42.033Z",
-      "updatedAt": "2026-08-07T10:48:14.365Z"
+      "updatedAt": "2026-08-22T09:04:01.777Z"
     },
     {
       "id": "20260724162616-tj0o",
