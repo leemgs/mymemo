@@ -2,15 +2,14 @@
   "memos": [
     {
       "id": "20260821052505-evwe",
-      "title": "논문 prompt (2026-08-21)",
+      "title": "논문 prompt: 논문 미흡 문장 보완작업",
       "snippet": "연구 논문을 이제 저널/학회에 제출하려고 합니다. 제출전에 혹시 accept 이 되기 위해 필요한 추가 내용 또는  논문의 내용들 중에  해당 저널/학회 리뷰어들의 지적사항이 될 소지가 있거나 아직 미흡한 문장들이 있으면 모두 작업을 clean허게  완료하세요. 완료후 main branch에 git push로 병합 완료하",
-      "more": false,
+      "more": true,
       "tags": [],
       "color": "",
       "attachments": [],
       "createdAt": "2026-08-20T20:25:05.375Z",
-      "updatedAt": "2026-08-20T20:30:28.751Z",
-      "content": "연구 논문을 이제 저널/학회에 제출하려고 합니다. 제출전에 혹시 accept 이 되기 위해 필요한 추가 내용 또는  논문의 내용들 중에  해당 저널/학회 리뷰어들의 지적사항이 될 소지가 있거나 아직 미흡한 문장들이 있으면 모두 작업을 clean허게  완료하세요. 완료후 main branch에 git push로 병합 완료하세요."
+      "updatedAt": "2026-08-29T02:20:03.454Z"
     },
     {
       "id": "20260810184805-rkpy",
@@ -36,8 +35,7 @@
     {
       "id": "20260802092542-ltbu",
       "title": "논문 Prompt: git commit의 제출자/signed-off-by 작업하기",
-      "snippet": "Prompt: git commit 일괄처리 방법입니다...\n\n\n## 모든 커밋 \ncommitter/author = Geunsik Lim\nleemgs@gmail.com, \nSigned-off-by 포함,\n 작업 트리 clean\n\n---\n\n\n\n\n\n모든 git commit들의 작성자/git body 내용에  claude가 아닌",
-      "more": true,
+      "content": "Prompt: git commit 일괄처리 방법입니다...\n\n\n## 모든 커밋 \ncommitter/author = Geunsik Lim\nleemgs@gmail.com, \nSigned-off-by 포함,\n 작업 트리 clean\n\n---\n\n\n\n\n\n모든 git commit들의 작성자/git body 내용에  claude가 아닌 내가 commit을 제출한것으로 작성하세요. \n\n(변경전) \ngit commit author claude \nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_017SurtjAwWF932RjcseMynq\n\n(변경후) \ngit commit author : Geunsik Lim <leemgs@gmail.com\nSigned-off-By :Geunsik Lim <leemgs@gmail.com\n\n예를 들어, commit의 내용이 이렇다고 가정합시다. \nCommit cb8dabd\nclaude\ncommitted\n=\nPre-submission cleanup: propagate GPU result and fix consistency\nFinal pass before journal submission. =.\n\n- Introduction: remove a dangling \"this question\" reference (no question was\n  posed); rewrite contribution 3 and the closing paragraph to include the GPU\n  run (both predictions confirmed) instead of \"unexecuted CUDA/XLA paths\".\n\nManuscript rebuilds cleanly (10 pp., 0 undefined refs/citations); submission\naudit passes (12 files).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_017SurtjAwWF932RjcseMynq",
       "tags": [],
       "color": "",
       "attachments": [],
