@@ -1,10 +1,10 @@
 {
   "id": "20260802092542-ltbu",
-  "title": "Prompt: git commit의 제출자/signed-off-by를 Geunsik Lim으로 일괄처리",
+  "title": "논문 Prompt: git commit의 제출자/signed-off-by 작업하기",
   "content": "Prompt: git commit 일괄처리 방법입니다...\n\n\n## 모든 커밋 \ncommitter/author = Geunsik Lim\nleemgs@gmail.com, \nSigned-off-by 포함,\n 작업 트리 clean\n\n---\n\n\n\n\n\n모든 git commit들의 작성자/git body 내용에  claude가 아닌 내가 commit을 제출한것으로 작성하세요. \n\n(변경전) \ngit commit author claude \nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_017SurtjAwWF932RjcseMynq\n\n(변경후) \ngit commit author : Geunsik Lim <leemgs@gmail.com\nSigned-off-By :Geunsik Lim <leemgs@gmail.com\n\n예를 들어, commit의 내용이 이렇다고 가정합시다. \nCommit cb8dabd\nclaude\ncommitted\n=\nPre-submission cleanup: propagate GPU result and fix consistency\nFinal pass before journal submission. =.\n\n- Introduction: remove a dangling \"this question\" reference (no question was\n  posed); rewrite contribution 3 and the closing paragraph to include the GPU\n  run (both predictions confirmed) instead of \"unexecuted CUDA/XLA paths\".\n\nManuscript rebuilds cleanly (10 pp., 0 undefined refs/citations); submission\naudit passes (12 files).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_017SurtjAwWF932RjcseMynq",
   "tags": [],
   "color": "",
   "attachments": [],
   "createdAt": "2026-08-02T00:25:42.033Z",
-  "updatedAt": "2026-08-29T02:19:04.424Z"
+  "updatedAt": "2026-08-29T02:19:39.474Z"
 }
