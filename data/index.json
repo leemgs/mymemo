@@ -1,6 +1,18 @@
 {
   "memos": [
     {
+      "id": "20260913191939-lxin",
+      "title": "논문 Prompt: 저널 논문 비용 사전 파악",
+      "snippet": "*** 저널에 논문 제출 방법 알려줘.  \n1) 이 저널 accept시 등재비/출판비 무료인지 점검해, \n2) 몇페이지까지 무료인지 알려줘.\n3) 그리고 논문 제출 공식 사이트 알려줘.",
+      "more": false,
+      "tags": [
+        "paper"
+      ],
+      "color": "",
+      "attachments": [],
+      "createdAt": "2026-09-13T10:19:39.203Z"
+    },
+    {
       "id": "20260913190657-pw5s",
       "title": "논문 Prompt: Figure, Table, Reference 표기 오류 점검/재정비",
       "snippet": "너는 최고 수준의 LaTeX 편집자이자 IEEE/ACM 저널 전문 연구 보조원(Research Assistant)이다.   내가 오직 논문의 학문적 깊이와 연구 논리에만 집중할 수 있도록, 아래의 기계적인 수정·검증 작업을 완벽하게 수행하고 수정된 LaTeX 코드를 출력해 줘.\n\n---\n\n### [수정 및 검증 요청 사항",
