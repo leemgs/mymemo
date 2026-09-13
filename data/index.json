@@ -3,8 +3,7 @@
     {
       "id": "20260913191939-lxin",
       "title": "논문 Prompt: 저널 논문 비용 사전 파악",
-      "snippet": "*** 저널에 논문 제출 방법 알려줘.  \n1) 이 저널 accept시 등재비/출판비 무료인지 점검해, \n2) 몇페이지까지 무료인지 알려줘.\n3) 그리고 논문 제출 공식 사이트 알려줘.",
-      "more": false,
+      "content": "*** 저널에 논문 제출 방법 알려줘.  \n1) 이 저널 accept시 등재비/출판비 무료인지 점검해, \n2) 몇페이지까지 무료인지 알려줘.\n3) 그리고 논문 제출 공식 사이트 알려줘.",
       "tags": [
         "paper"
       ],
@@ -107,14 +106,15 @@
     {
       "id": "20260802092542-ltbu",
       "title": "논문 Prompt: git commit의 제출자/signed-off-by 작업하기",
-      "content": "Prompt: git commit 일괄처리 방법입니다...\n\n\n## 모든 커밋 \ncommitter/author = Geunsik Lim\nleemgs@gmail.com, \nSigned-off-by 포함,\n 작업 트리 clean\n\n---\n\n\n\n\n\n모든 git commit들의 작성자/git body 내용에  claude가 아닌 내가 commit을 제출한것으로 작성하세요. \n\n(변경전) \ngit commit author claude \nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_017SurtjAwWF932RjcseMynq\n\n(변경후) \ngit commit author : Geunsik Lim <leemgs@gmail.com\nSigned-off-By :Geunsik Lim <leemgs@gmail.com\n\n예를 들어, commit의 내용이 이렇다고 가정합시다. \nCommit cb8dabd\nclaude\ncommitted\n=\nPre-submission cleanup: propagate GPU result and fix consistency\nFinal pass before journal submission. =.\n\n- Introduction: remove a dangling \"this question\" reference (no question was\n  posed); rewrite contribution 3 and the closing paragraph to include the GPU\n  run (both predictions confirmed) instead of \"unexecuted CUDA/XLA paths\".\n\nManuscript rebuilds cleanly (10 pp., 0 undefined refs/citations); submission\naudit passes (12 files).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_017SurtjAwWF932RjcseMynq",
+      "snippet": "Prompt: git commit 일괄처리 방법입니다...\n\n\n## 모든 커밋 \ncommitter/author = Geunsik Lim\nleemgs@gmail.com, \nSigned-off-by 포함,\n 작업 트리 clean\n\n---\n\n\n\n\n\n모든 git commit들의 작성자/git body 내용에  chatgpt or",
+      "more": true,
       "tags": [
         "paper"
       ],
       "color": "",
       "attachments": [],
       "createdAt": "2026-08-02T00:25:42.033Z",
-      "updatedAt": "2026-09-13T10:01:18.118Z"
+      "updatedAt": "2026-09-13T11:19:31.850Z"
     },
     {
       "id": "20260724162616-tj0o",
