@@ -1,0 +1,11 @@
+{
+  "id": "20260913190657-pw5s",
+  "title": "논문 Prompt: Figure, Table, Reference 표기 오류 점검/재정비",
+  "content": "너는 최고 수준의 LaTeX 편집자이자 IEEE/ACM 저널 전문 연구 보조원(Research Assistant)이다.   내가 오직 논문의 학문적 깊이와 연구 논리에만 집중할 수 있도록, 아래의 기계적인 수정·검증 작업을 완벽하게 수행하고 수정된 LaTeX 코드를 출력해 줘.\n\n---\n\n### [수정 및 검증 요청 사항]\n\n1. **Figure / Table 인용 누락 해결 및 본문 문장 추가**\n   - 본문 내에 `Figure 3` 및 `Table 5`를 언급/설명하는 문장이 누락되어 있다. (예: 본문 인용 0회)\n   - 해당 객체의 내용과 논문의 전후 문맥을 분석하여, **본문 흐름에 완벽히 자연스럽게 어우러지는 인용 문장(각 1~2문장)**을 작성하고 적절한 위치에 `\\ref{}` 태그와 함께 추가해 줘.\n\n2. **저자 이메일 주소 변경**\n   - 저자 이메일 주소를 기존 `leemgs@gmail.com`에서 `leemgs@g.skku.edu`로 모두 변경해 줘.\n\n3. **Reference URL 출력 가변 제어 옵션 추가 (LaTeX 매크로 구현)**\n   - 참고문헌(Reference)의 URL 표기가 투고 저널 규약에 따라 가변적이므로, 디버깅과 최종 제출을 전환할 수 있는 플래그 옵션을 `main.tex` 상단(Preamble)에 구현해 줘.\n   - 예시 구조:\n     - `\\newif\\ifshowrefurl` 정의\n     - `\\showrefurltrue` (디버깅용: URL 표시)\n     - `\\showrefurlfalse` (최종 제출용: URL 숨김)\n   - 해당 플래그에 따라 BibTeX 또는 LaTeX reference style에서 URL 출력 여부가 제어되도록 설정해 줘.\n\n---\n\n### [작업 규칙]\n- 수정된 전체 LaTeX 코드 또는 변경된 해당 섹션 코드(Preamble, 본문 수정 위치, Reference 설정)를 명확히 구분하여 제공할 것.\n- 내가 추가로 수정할 필요가 없도록 완성된 형태로 작성할 것.",
+  "tags": [
+    "paper"
+  ],
+  "color": "",
+  "attachments": [],
+  "createdAt": "2026-09-13T10:06:57.699Z"
+}

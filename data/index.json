@@ -1,6 +1,18 @@
 {
   "memos": [
     {
+      "id": "20260913190657-pw5s",
+      "title": "논문 Prompt: Figure, Table, Reference 표기 오류 점검/재정비",
+      "snippet": "너는 최고 수준의 LaTeX 편집자이자 IEEE/ACM 저널 전문 연구 보조원(Research Assistant)이다.   내가 오직 논문의 학문적 깊이와 연구 논리에만 집중할 수 있도록, 아래의 기계적인 수정·검증 작업을 완벽하게 수행하고 수정된 LaTeX 코드를 출력해 줘.\n\n---\n\n### [수정 및 검증 요청 사항",
+      "more": true,
+      "tags": [
+        "paper"
+      ],
+      "color": "",
+      "attachments": [],
+      "createdAt": "2026-09-13T10:06:57.699Z"
+    },
+    {
       "id": "20260910210421-ez5q",
       "title": "논문 Prompt: 실험 기대값 샘플 제작",
       "content": "./paper/generated/evaluation-data/ 폴더에 샘플 데이터를 생각없이 대충 만들지 말고 본 논문의 아이디어를 적용시 기대되는 결과값들이 논리적으로 타당하고 이상적인 실험 결과 값의 가치로 만들어야 합니다. 즉 실제 실험시 이 기대값을 보고 개발 및 최적화하는데 레퍼런스가 될수 있어야 합니다.  작업해주세요.",
@@ -83,8 +95,7 @@
     {
       "id": "20260802092542-ltbu",
       "title": "논문 Prompt: git commit의 제출자/signed-off-by 작업하기",
-      "snippet": "Prompt: git commit 일괄처리 방법입니다...\n\n\n## 모든 커밋 \ncommitter/author = Geunsik Lim\nleemgs@gmail.com, \nSigned-off-by 포함,\n 작업 트리 clean\n\n---\n\n\n\n\n\n모든 git commit들의 작성자/git body 내용에  claude가 아닌",
-      "more": true,
+      "content": "Prompt: git commit 일괄처리 방법입니다...\n\n\n## 모든 커밋 \ncommitter/author = Geunsik Lim\nleemgs@gmail.com, \nSigned-off-by 포함,\n 작업 트리 clean\n\n---\n\n\n\n\n\n모든 git commit들의 작성자/git body 내용에  claude가 아닌 내가 commit을 제출한것으로 작성하세요. \n\n(변경전) \ngit commit author claude \nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_017SurtjAwWF932RjcseMynq\n\n(변경후) \ngit commit author : Geunsik Lim <leemgs@gmail.com\nSigned-off-By :Geunsik Lim <leemgs@gmail.com\n\n예를 들어, commit의 내용이 이렇다고 가정합시다. \nCommit cb8dabd\nclaude\ncommitted\n=\nPre-submission cleanup: propagate GPU result and fix consistency\nFinal pass before journal submission. =.\n\n- Introduction: remove a dangling \"this question\" reference (no question was\n  posed); rewrite contribution 3 and the closing paragraph to include the GPU\n  run (both predictions confirmed) instead of \"unexecuted CUDA/XLA paths\".\n\nManuscript rebuilds cleanly (10 pp., 0 undefined refs/citations); submission\naudit passes (12 files).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_017SurtjAwWF932RjcseMynq",
       "tags": [
         "paper"
       ],
