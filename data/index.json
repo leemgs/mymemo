@@ -1,6 +1,18 @@
 {
   "memos": [
     {
+      "id": "20260919150808-ncal",
+      "title": "논문 Prompt: 논문 실험용  Jupyter Notebook 파일 생성",
+      "snippet": "논문의 아이디어 실험을 해야한다. \nGoogle colab에서 내가 실행하기 위해 쥬피트 노트북 파일로 생성할수 있니?",
+      "more": false,
+      "tags": [
+        "paper"
+      ],
+      "color": "",
+      "attachments": [],
+      "createdAt": "2026-09-19T06:08:08.476Z"
+    },
+    {
       "id": "20260918050709-0p50",
       "title": "논문 Prompt: 최종 남은 저자 직접 수행 작업 부분 작성",
       "snippet": "이제 너가할수 있는 부분이 아니고 연구윤리상 내가 꼭 작업을 수행해야하는 부분만 말해줘. Step by step 으로 내가 직접 실행만하면  되는내용을 copy /paste 형식으로 설명을 해줘. 내가 copy/paste으로 실제 작업 수행해서 줆게요.",
