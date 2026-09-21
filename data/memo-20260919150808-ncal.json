@@ -1,11 +1,12 @@
 {
   "id": "20260919150808-ncal",
-  "title": "논문 Prompt: 논문 실험용  Jupyter Notebook 파일 생성",
-  "content": "논문의 아이디어 실험을 해야한다. \nGoogle colab에서 내가 실행하기 위해 쥬피트 노트북 파일로 생성할수 있니?",
+  "title": "논문 Prompt: 논문 실험용 Jupyter Notebook (*.ipynb) 파일 생성",
+  "content": "논문의 아이디어 실험을 해야한다.   Kaggle Notebooks: 구글이 운영하며 주당 약 30시간의 무료 GPU(P100/T4) 및 TPU를 무료로 제공합니다.  내가 실행하기 위해 쥬피트 노트북 파일로 생성할수 있니? https://www.kaggle.com/ 에서 완전하게 정상적으로 동작되는 .ipynb  파일을 생성하세요.",
   "tags": [
     "paper"
   ],
   "color": "",
   "attachments": [],
-  "createdAt": "2026-09-19T06:08:08.476Z"
+  "createdAt": "2026-09-19T06:08:08.476Z",
+  "updatedAt": "2026-09-21T09:46:59.537Z"
 }
