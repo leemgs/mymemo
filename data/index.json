@@ -1,14 +1,14 @@
 {
   "memos": [
     {
-      "id": "20260926164922-cjdp",
-      "title": "Prompt: 낚시대 구매",
-      "snippet": "첨부한 낚시대 및 스피닝릴 세트 사진을 분석해 줘. 각 장비의 상세 종류와 예상 신품가, 중고 거래 적정 시세를 개별 및 일괄(세트) 기준으로 내용을 테이블 형식으로 출력해 줘.  그리고 전체적인 가격대 대비 가성비 평가와 구매하기 전 확인해야 할 체크포인트 (가이드링 파손, 릴 감도, 초릿대 등)를 정리해 줘.",
-      "more": false,
+      "id": "20260926180802-75g9",
+      "title": "논문 Prompt:  나(아이디어) + AI (그냥 하면 되는 작업들)",
+      "snippet": "내가 작업을 거의 다한거 같은데, 남아 있는 리뷰어들의 피드벡/커멘트들은  반영하는  작업을 수행해. \n내가 일일이 그냥 하면 되는 작업을 내가 다 하면 내가 너를 매월 돈주면서 구독해야 하는 이유가 뭐냐? \n내가 사실 주요아이디오 다 만들었고 하기만 하면 되는일은 너한테 시키고 있는데 이런식이면 내 월구독비만 아깝다. ",
+      "more": true,
       "tags": [],
       "color": "",
       "attachments": [],
-      "createdAt": "2026-09-26T07:49:22.426Z"
+      "createdAt": "2026-09-26T09:08:02.888Z"
     },
     {
       "id": "20260919150808-ncal",
@@ -154,14 +154,15 @@
       "id": "20260802092542-ltbu",
       "title": "논문 Prompt: git commit의 제출자/signed-off-by 작업하기",
       "snippet": "Prompt: git commit 일괄처리 방법입니다...\n\n\n## 모든 커밋 \ncommitter/author = Geunsik Lim\nleemgs@gmail.com, \nSigned-off-by 포함,\n 작업 트리 clean\n\n---\n\n\n\n\n\n모든 git commit들의 작성자/git body 내용에  chatgpt or",
-      "more": true,
+      "more": false,
       "tags": [
         "paper"
       ],
       "color": "",
       "attachments": [],
       "createdAt": "2026-08-02T00:25:42.033Z",
-      "updatedAt": "2026-09-13T11:19:31.850Z"
+      "updatedAt": "2026-09-13T11:19:31.850Z",
+      "content": "Prompt: git commit 일괄처리 방법입니다...\n\n\n## 모든 커밋 \ncommitter/author = Geunsik Lim\nleemgs@gmail.com, \nSigned-off-by 포함,\n 작업 트리 clean\n\n---\n\n\n\n\n\n모든 git commit들의 작성자/git body 내용에  chatgpt or claude가 아닌 내가 commit을 제출한것으로 작성하세요. \n\n(변경전) \ngit commit author claude \nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_017SurtjAwWF932RjcseMynq\n\n(변경후) \ngit commit author : Geunsik Lim <leemgs@gmail.com\nSigned-off-By :Geunsik Lim <leemgs@gmail.com\n\n예를 들어, commit의 내용이 이렇다고 가정합시다. \nCommit cb8dabd\nclaude\ncommitted\n=\nPre-submission cleanup: propagate GPU result and fix consistency\nFinal pass before journal submission. =.\n\n- Introduction: remove a dangling \"this question\" reference (no question was\n  posed); rewrite contribution 3 and the closing paragraph to include the GPU\n  run (both predictions confirmed) instead of \"unexecuted CUDA/XLA paths\".\n\nManuscript rebuilds cleanly (10 pp., 0 undefined refs/citations); submission\naudit passes (12 files).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_017SurtjAwWF932RjcseMynq"
     },
     {
       "id": "20260724162616-tj0o",
